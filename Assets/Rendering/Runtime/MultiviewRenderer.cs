@@ -18,8 +18,6 @@ public class MultiviewRenderer : ScriptableRenderer
     public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
     {
         EnqueuePass(multiviewRenderPass);
-
-        multiviewRenderPass.background = rendererData.backgroundColor;
     }
 
     protected override void Dispose(bool disposing)
