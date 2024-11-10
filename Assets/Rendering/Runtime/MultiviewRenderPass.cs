@@ -22,14 +22,14 @@ public class MultiviewRenderPass : ScriptableRenderPass
     {
         Vector2Int resolution = new Vector2Int(cameraTextureDescriptor.width, cameraTextureDescriptor.height);
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½ï¿½nullï¿½Aï¿½Ü‚ï¿½ï¿½Í‰ğ‘œ“xï¿½ï¿½ï¿½ÏXï¿½ï¿½ï¿½ê‚½ï¿½ê‡ï¿½Éƒï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½ï¿½ï¿½mï¿½ï¿½
+        // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ªnullA‚Ü‚½‚Í‰ğ‘œ“x‚ª•ÏX‚³‚ê‚½ê‡‚ÉƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ğŠm•Û
         if(colorTarget != null || depthTarget != null ||  currentResolution != resolution)
         {
-            // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½Ì‰ï¿½ï¿½
+            // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚Ì‰ğ•ú
             colorTarget?.Release();
             depthTarget?.Release();
 
-            // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½ÌŠmï¿½ï¿½
+            // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ÌŠm•Û
             colorTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height,
                 1, DepthBits.None, GraphicsFormat.R8G8B8A8_SRGB, FilterMode.Bilinear,
                 TextureWrapMode.Clamp, name: "_CameraColorTexture");
@@ -41,10 +41,10 @@ public class MultiviewRenderPass : ScriptableRenderPass
             currentResolution = resolution;
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½Ìİ’ï¿½
+        // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚Ìİ’è
         ConfigureTarget(colorTarget, depthTarget);
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½ÌƒNï¿½ï¿½ï¿½A
+        // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ÌƒNƒŠƒA
         ConfigureClear(ClearFlag.All, Color.clear);
     }
 
@@ -52,10 +52,14 @@ public class MultiviewRenderPass : ScriptableRenderPass
     {
         CommandBuffer cmd = CommandBufferPool.Get("MultiviewRenderPass");
 
-        // Rener: colorTarget, depthTargetï¿½É•`ï¿½ï¿½
+        cmd.EnableShaderKeyword("MULTIVIEW");
+
+        // Rener: colorTarget, depthTarget‚É•`‰æ
         Render(context, ref renderingData);
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½[ï¿½^ï¿½[ï¿½Qï¿½bï¿½gï¿½Ì‰ï¿½ï¿½ï¿½
+        cmd.DisableShaderKeyword("MULTIVIEW");
+
+        // ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚Ì‰ğœ
         ResetTarget();
 
         using (new ProfilingScope(cmd, new ProfilingSampler("Blit")))
@@ -75,24 +79,25 @@ public class MultiviewRenderPass : ScriptableRenderPass
 
     void Render(ScriptableRenderContext context, ref RenderingData renderingData)
     {
-        // ï¿½sï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Ì•`ï¿½ï¿½
+        // •s“§–¾ƒIƒuƒWƒFƒNƒg‚Ì•`‰æ
         SortingSettings sortingSettings = new SortingSettings(renderingData.cameraData.camera)
         {
             criteria = SortingCriteria.CommonOpaque
         };
 
         DrawingSettings drawingSettings = new DrawingSettings(new ShaderTagId("SRPDefaultUnlit"), sortingSettings);
+        drawingSettings.SetShaderPassName(1, new ShaderTagId("UniversalForward"));
         FilteringSettings filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
 
         context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
 
-        // ï¿½Xï¿½Jï¿½Cï¿½{ï¿½bï¿½Nï¿½Xï¿½Ì•`ï¿½ï¿½
+        // ƒXƒJƒCƒ{ƒbƒNƒX‚Ì•`‰æ
         if (renderingData.cameraData.camera.clearFlags == CameraClearFlags.Skybox)
         {
             context.DrawSkybox(renderingData.cameraData.camera);
         }
 
-        // ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½uï¿½Wï¿½Fï¿½Nï¿½gï¿½Ì•`ï¿½ï¿½
+        // “§–¾ƒIƒuƒWƒFƒNƒg‚Ì•`‰æ
         sortingSettings.criteria = SortingCriteria.CommonTransparent;
         drawingSettings.sortingSettings = sortingSettings;
         filteringSettings.renderQueueRange = RenderQueueRange.transparent;
