@@ -7,6 +7,7 @@ using UnityEngine.Rendering.Universal;
 
 public class MultiviewRenderPass : ScriptableRenderPass
 {
+    Vector2Int currentResolution;
     RTHandle colorTarget;
     RTHandle depthTarget;
 
@@ -19,15 +20,25 @@ public class MultiviewRenderPass : ScriptableRenderPass
 
     public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
     {
-        // レンダーターゲットの生成
-        if (colorTarget == null)
-        {
-            colorTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height, 1, DepthBits.None, GraphicsFormat.R8G8B8A8_SRGB, FilterMode.Bilinear, TextureWrapMode.Clamp, name: "_CameraColorTexture");
-        }
+        Vector2Int resolution = new Vector2Int(cameraTextureDescriptor.width, cameraTextureDescriptor.height);
 
-        if (depthTarget == null)
+        // レンダーターゲットがnull、または解像度が変更された場合にレンダーターゲットを確保
+        if(colorTarget != null || depthTarget != null ||  currentResolution != resolution)
         {
-            depthTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height, 1, DepthBits.Depth24, GraphicsFormat.D32_SFloat, FilterMode.Point, TextureWrapMode.Clamp, name: "_CameraDepthTexture");
+            // レンダーターゲットの解放
+            colorTarget?.Release();
+            depthTarget?.Release();
+
+            // レンダーターゲットの確保
+            colorTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height,
+                1, DepthBits.None, GraphicsFormat.R8G8B8A8_SRGB, FilterMode.Bilinear,
+                TextureWrapMode.Clamp, name: "_CameraColorTexture");
+
+            depthTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height,
+                1, DepthBits.Depth32, GraphicsFormat.R32_SFloat, FilterMode.Point,
+                TextureWrapMode.Clamp, name: "_CameraDepthTexture");
+
+            currentResolution = resolution;
         }
 
         // レンダーターゲットの設定
@@ -44,10 +55,13 @@ public class MultiviewRenderPass : ScriptableRenderPass
         // レンダーターゲットの解除
         ResetTarget();
 
-        // Blit
-        if (blitMat != null)
+        using (new ProfilingScope(cmd, new ProfilingSampler("Blit")))
         {
-            Blitter.BlitCameraTexture(cmd, colorTarget, k_CameraTarget, blitMat, 0);
+            // Blit
+            if (blitMat != null)
+            {
+                Blitter.BlitCameraTexture(cmd, colorTarget, k_CameraTarget, blitMat, 0);
+            }
         }
 
         context.ExecuteCommandBuffer(cmd);
@@ -81,4 +95,5 @@ public class MultiviewRenderPass : ScriptableRenderPass
         filteringSettings.renderQueueRange = RenderQueueRange.transparent;
         context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
     }
+
 }
