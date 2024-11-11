@@ -11,20 +11,47 @@ Shader "Hidden/BlitToCameraRT"
 
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            // The Blit.hlsl file provides the vertex shader (Vert),
-            // input structure (Attributes) and output strucutre (Varyings)
-            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
+            #pragma target 5.0
             #pragma vertex Vert
             #pragma fragment frag
+            #pragma require 2darray
 
-            SAMPLER(sampler_BlitTexture);
+            TEXTURE2D_ARRAY(_ColorRTArray);
+            SAMPLER(sampler_ColorRTArray);
 
-            half4 frag (Varyings input) : SV_Target
+            struct appdata
             {
-                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                float2 uv = float2(input.texcoord.x, 1.0 - input.texcoord.y);
-                float4 color = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_BlitTexture, uv);
+                float4 vertex : POSITION;
+            };
+
+            struct v2f
+            {
+                float4 vertex : SV_POSITION;
+            };
+
+            v2f Vert (appdata v)
+			{
+				v2f o;
+                o.vertex = v.vertex;
+				return o;
+			}
+
+            half4 frag (v2f input) : SV_Target
+            {
+                float2 uv = input.vertex.xy;
+                half4 color;
+                if(uv.x < 0.5f)
+                {
+                    uv.x *= 2.0f;
+                    color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 1);
+                }
+                else
+				{
+                    uv.x = (uv.x - 0.5f) * 2.0f;
+					color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 0);
+				}
+                
                 return color;
             }
             ENDHLSL

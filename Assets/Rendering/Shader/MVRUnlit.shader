@@ -15,9 +15,10 @@ Shader "Multiview/MVRUnlit"
             NAME "MULTIVIEW"
 
             HLSLPROGRAM
+            #pragma target 5.0
             #pragma vertex vert
             #pragma fragment frag
-            #pragma shader_feature MULTIVIEW
+            #pragma shader_feature MULTIVIEW_PASS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -25,12 +26,18 @@ Shader "Multiview/MVRUnlit"
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
+                // #ifdef MULTIVIEW_PASS
+                uint instanceID : SV_InstanceID;
+                // #endif
             };
 
             struct v2f
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                // #ifdef MULTIVIEW_PASS
+                uint rtIndex : SV_RenderTargetArrayIndex;
+                // #endif
             };
 
             TEXTURE2D(_MainTex);
@@ -46,6 +53,9 @@ Shader "Multiview/MVRUnlit"
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                // #ifdef MULTIVIEW_PASS
+                o.rtIndex = v.instanceID;
+                // #endif
                 return o;
             }
 
