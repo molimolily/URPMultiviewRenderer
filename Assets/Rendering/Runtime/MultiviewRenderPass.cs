@@ -6,7 +6,9 @@ using UnityEngine.Rendering.Universal;
 
 public class MultiviewRenderPass : ScriptableRenderPass
 {
-    static readonly GlobalKeyword multiview_Keyword = new GlobalKeyword("MULTIVIEW_PASS");
+    static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
+
+    public uint viewCount = 1;
 
     RTHandle colorRtArray;
     RTHandle depthRtArray;
@@ -25,7 +27,7 @@ public class MultiviewRenderPass : ScriptableRenderPass
         cmd.EnableKeyword(multiview_Keyword);
 
         // 視点数だけインスタンス数を乗算
-        cmd.SetInstanceMultiplier(2);
+        cmd.SetInstanceMultiplier(viewCount);
     }
 
     public void SetTarget(RTHandle color, RTHandle depth)

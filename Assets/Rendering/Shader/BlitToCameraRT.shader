@@ -63,20 +63,30 @@ Shader "Hidden/BlitToCameraRT"
                 return output;
             }
 
+            static int viewCount_x = 2;
+            static int viewCount_y = 2;
+
+            int CalculateSegment(float x, int k)
+            {
+                x = clamp(x, 0.0, 1.0);
+                float interval = 1.0 / k;
+                int index = int(x / interval);
+                return clamp(index, 0, k - 1);
+            }
+
             half4 frag (Varyings input) : SV_Target
             {
-                float2 uv = float2(input.texcoord.x, 1.0f - input.texcoord.y);
-                half4 color;
-                if(uv.x < 0.5f)
-                {
-                    uv.x *= 2.0f;
-                    color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 1);
-                }
-                else
-				{
-                    uv.x = (uv.x - 0.5f) * 2.0f;
-					color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 0);
-				}
+                float2 uv = input.texcoord;
+
+                int slice_x = CalculateSegment(uv.x, viewCount_x);
+                int slice_y = CalculateSegment(uv.y, viewCount_y);
+                int slice = slice_x + slice_y * viewCount_x;
+
+                uv.x = (uv.x - slice_x * (1.0 / viewCount_x)) * viewCount_x;
+                uv.y = 1.0f - (uv.y - slice_y * (1.0 / viewCount_y)) * viewCount_y;
+
+                half4 color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, slice);
+
                 return color;
             }
             ENDHLSL

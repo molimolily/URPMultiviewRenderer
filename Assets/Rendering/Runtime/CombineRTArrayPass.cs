@@ -25,6 +25,9 @@ public class CombineRTArrayPass : ScriptableRenderPass
     {
         CommandBuffer cmd = CommandBufferPool.Get("CombineRTArrayPass");
 
+        Rect camRect = renderingData.cameraData.camera.pixelRect;
+        cmd.SetViewport(camRect);
+
         if (blitMat != null && colorRTArray != null)
         {
             blitMat.SetTexture("_ColorRTArray", colorRTArray.rt);

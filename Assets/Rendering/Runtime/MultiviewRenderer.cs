@@ -22,6 +22,9 @@ public class MultiviewRenderer : ScriptableRenderer
         rendererData = data as MultiviewRendererData;
         multiviewRenderPass = new MultiviewRenderPass();
 
+        // éãì_êîÇÃê›íË
+        multiviewRenderPass.viewCount = 4;
+
         blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitToCameraRT"));
         combinedRTArrayPass = new CombineRTArrayPass(blitMat);
     }
@@ -40,19 +43,21 @@ public class MultiviewRenderer : ScriptableRenderer
 
             colorRTArray = RTHandles.Alloc(
                     width: camTexDesc.width / 2,
-                    height: camTexDesc.height,
-                    slices: 2,
+                    height: camTexDesc.height / 2,
+                    slices: 4,
                     depthBufferBits: DepthBits.None,
                     colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
+                    filterMode: FilterMode.Bilinear,
                     dimension: TextureDimension.Tex2DArray
                     );
 
             depthRTArray = RTHandles.Alloc(
                 width: camTexDesc.width / 2,
-                height: camTexDesc.height,
-                slices: 2,
+                height: camTexDesc.height / 2,
+                slices: 4,
                 depthBufferBits: DepthBits.Depth32,
                 colorFormat: GraphicsFormat.R32_SFloat,
+                filterMode: FilterMode.Point,
                 dimension: TextureDimension.Tex2DArray
                 );
 
