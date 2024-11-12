@@ -4,27 +4,26 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class CombinedRTArrayPass : ScriptableRenderPass
+public class CombineRTArrayPass : ScriptableRenderPass
 {
     Material blitMat;
     RTHandle colorRTArray;
 
-    public RTHandle ColorRTArray { set => colorRTArray = value; }
-
-    public CombinedRTArrayPass(Material blitMaterial)
+    public CombineRTArrayPass(Material blitMaterial)
     {
         blitMat = blitMaterial;
         renderPassEvent = RenderPassEvent.AfterRendering;
+        ConfigureInput(ScriptableRenderPassInput.Color);
     }
 
-    public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+    public void SetInput(RTHandle colorRTArray)
     {
-
+        this.colorRTArray = colorRTArray;
     }
 
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
-        CommandBuffer cmd = CommandBufferPool.Get("CombinedRTArrayPass");
+        CommandBuffer cmd = CommandBufferPool.Get("CombineRTArrayPass");
 
         if (blitMat != null && colorRTArray != null)
         {

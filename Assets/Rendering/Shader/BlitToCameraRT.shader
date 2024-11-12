@@ -65,19 +65,17 @@ Shader "Hidden/BlitToCameraRT"
 
             half4 frag (Varyings input) : SV_Target
             {
-                float2 uv = input.texcoord;
+                float2 uv = float2(input.texcoord.x, 1.0f - input.texcoord.y);
                 half4 color;
                 if(uv.x < 0.5f)
                 {
                     uv.x *= 2.0f;
-                    // color = half4(1, 0, 0, 1);
                     color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 1);
                 }
                 else
 				{
                     uv.x = (uv.x - 0.5f) * 2.0f;
 					color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, 0);
-					// color = half4(0, 1, 0, 1);
 				}
                 return color;
             }

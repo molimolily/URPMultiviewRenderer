@@ -1,15 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using UnityEngine.Rendering.Universal.Internal;
 
 public class MultiviewRenderer : ScriptableRenderer
 {
     MultiviewRendererData rendererData;
     MultiviewRenderPass multiviewRenderPass;
-    CombinedRTArrayPass combinedRTArrayPass;
+    CombineRTArrayPass combinedRTArrayPass;
+
+    RTHandle colorRTArray;
+    RTHandle depthRTArray;
+    Vector2Int currentResolution;
 
     Material blitMat;
 
@@ -19,21 +23,58 @@ public class MultiviewRenderer : ScriptableRenderer
         multiviewRenderPass = new MultiviewRenderPass();
 
         blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitToCameraRT"));
-        // blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitterMat"));
-        combinedRTArrayPass = new CombinedRTArrayPass(blitMat);
+        combinedRTArrayPass = new CombineRTArrayPass(blitMat);
     }
 
     public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
     {
+        ref CameraData cameraData = ref renderingData.cameraData;
+        RenderTextureDescriptor camTexDesc = cameraData.cameraTargetDescriptor;
+        Vector2Int resolution = new Vector2Int(camTexDesc.width, camTexDesc.height);
+
+        // レンダーターゲットがnull、または解像度が変更された場合にレンダーターゲットを確保
+        if (colorRTArray == null || depthRTArray == null || currentResolution != resolution)
+        {
+            colorRTArray?.Release();
+            depthRTArray?.Release();
+
+            colorRTArray = RTHandles.Alloc(
+                    width: camTexDesc.width / 2,
+                    height: camTexDesc.height,
+                    slices: 2,
+                    depthBufferBits: DepthBits.None,
+                    colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
+                    dimension: TextureDimension.Tex2DArray
+                    );
+
+            depthRTArray = RTHandles.Alloc(
+                width: camTexDesc.width / 2,
+                height: camTexDesc.height,
+                slices: 2,
+                depthBufferBits: DepthBits.Depth32,
+                colorFormat: GraphicsFormat.R32_SFloat,
+                dimension: TextureDimension.Tex2DArray
+                );
+
+            currentResolution = resolution;
+        }
+
+        // レンダーターゲットの設定
+        multiviewRenderPass.SetTarget(colorRTArray, depthRTArray);
+
+        // レンダーテクスチャの設定
+        combinedRTArrayPass.SetInput(colorRTArray);
+
+        // passの追加
         EnqueuePass(multiviewRenderPass);
-
-        combinedRTArrayPass.ColorRTArray = multiviewRenderPass.ColorRTArray;
-
         EnqueuePass(combinedRTArrayPass);
     }
 
     protected override void Dispose(bool disposing)
     {
         CoreUtils.Destroy(blitMat);
+
+        colorRTArray?.Release();
+        depthRTArray?.Release();
     }
 }
