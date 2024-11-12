@@ -10,16 +10,15 @@ public class MultiviewRenderPass : ScriptableRenderPass
     // static readonly GlobalKeyword multiview_Keyword = new GlobalKeyword("MULTIVIEW_PASS");
 
     Vector2Int currentResolution;
-    RTHandle colorTarget;
-    RTHandle depthTarget;
     RTHandle colorRtArray;
     RTHandle depthRtArray;
 
-    Material blitMat;
-    
+
+    public RTHandle ColorRTArray => colorRtArray;
+
     public MultiviewRenderPass()
     {
-        blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitToCameraRT"));
+        
     }
 
     public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -27,45 +26,6 @@ public class MultiviewRenderPass : ScriptableRenderPass
         Vector2Int resolution = new Vector2Int(cameraTextureDescriptor.width, cameraTextureDescriptor.height);
 
         // レンダーターゲットがnull、または解像度が変更された場合にレンダーターゲットを確保
-        /*if(colorTarget != null || depthTarget != null ||  currentResolution != resolution)
-        {
-            // レンダーターゲットの解放
-            colorTarget?.Release();
-            depthTarget?.Release();
-
-            colorRtArray?.Release();
-            depthRtArray?.Release();
-
-            // レンダーターゲットの確保
-            colorTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height,
-                1, DepthBits.None, GraphicsFormat.R8G8B8A8_SRGB, FilterMode.Bilinear,
-                TextureWrapMode.Clamp, name: "_CameraColorTexture");
-
-            depthTarget = RTHandles.Alloc(cameraTextureDescriptor.width, cameraTextureDescriptor.height,
-                1, DepthBits.Depth32, GraphicsFormat.R32_SFloat, FilterMode.Point,
-                TextureWrapMode.Clamp, name: "_CameraDepthTexture");
-
-            colorRtArray = RTHandles.Alloc(
-                width: cameraTextureDescriptor.width / 2,
-                height: cameraTextureDescriptor.height,
-                slices: 2,
-                depthBufferBits: DepthBits.None,
-                colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
-                dimension: TextureDimension.Tex2DArray
-                );
-
-            depthRtArray = RTHandles.Alloc(
-                width: cameraTextureDescriptor.width / 2,
-                height: cameraTextureDescriptor.height,
-                slices: 2,
-                depthBufferBits: DepthBits.Depth32,
-                colorFormat: GraphicsFormat.R32_SFloat,
-                dimension: TextureDimension.Tex2DArray
-                );
-
-            currentResolution = resolution;
-        }*/
-
         if (colorRtArray != null || depthRtArray != null || currentResolution != resolution)
         {
             // レンダーターゲットの解放
@@ -95,7 +55,6 @@ public class MultiviewRenderPass : ScriptableRenderPass
         }
 
         // レンダーターゲットの設定
-        // ConfigureTarget(colorTarget, depthTarget);
         ConfigureTarget(colorRtArray, depthRtArray);
 
         // レンダーターゲットのクリア
@@ -115,16 +74,16 @@ public class MultiviewRenderPass : ScriptableRenderPass
         // レンダーターゲットの解除
         // ResetTarget();
 
-        using (new ProfilingScope(cmd, new ProfilingSampler("Blit")))
+        /*using (new ProfilingScope(cmd, new ProfilingSampler("Blit")))
         {
             // Blit
-            /*if (blitMat != null)
+            if (blitMat != null)
             {
                 Blitter.BlitCameraTexture(cmd, colorTarget, k_CameraTarget, blitMat, 0);
-            }*/
+            }
             blitMat.SetTexture("_ColorRTArray", colorRtArray);
             cmd.DrawProcedural(Matrix4x4.identity, blitMat, 0, MeshTopology.Quads, 4, 1);
-        }
+        }*/
 
         context.ExecuteCommandBuffer(cmd);
 
@@ -166,5 +125,11 @@ public class MultiviewRenderPass : ScriptableRenderPass
 
         cmd.DisableShaderKeyword("MULTIVIEW_PASS");
         cmd.SetInstanceMultiplier(1);
+    }
+
+    public override void FrameCleanup(CommandBuffer cmd)
+    {
+        base.FrameCleanup(cmd);
+
     }
 }

@@ -8,8 +8,6 @@ using UnityEngine.Rendering.Universal;
 [CreateAssetMenu(menuName = "Rendering/Multiview Renderer", fileName = "MultiviewRenderer")]
 public class MultiviewRendererData : ScriptableRendererData
 {
-    public Color backgroundColor = Color.white;
-
     protected override ScriptableRenderer Create()
     {
         return new MultiviewRenderer(this);
