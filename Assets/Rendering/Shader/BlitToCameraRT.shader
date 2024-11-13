@@ -20,6 +20,9 @@ Shader "Hidden/BlitToCameraRT"
             TEXTURE2D_ARRAY(_ColorRTArray);
             SAMPLER(sampler_ColorRTArray);
 
+            int _ViewCountX;
+            int _ViewCountY;
+
             // Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl Ç©ÇÁÉRÉsÅ[
             #if SHADER_API_GLES
             struct Attributes
@@ -63,9 +66,6 @@ Shader "Hidden/BlitToCameraRT"
                 return output;
             }
 
-            static int viewCount_x = 2;
-            static int viewCount_y = 2;
-
             int CalculateSegment(float x, int k)
             {
                 x = clamp(x, 0.0, 1.0);
@@ -78,12 +78,12 @@ Shader "Hidden/BlitToCameraRT"
             {
                 float2 uv = input.texcoord;
 
-                int slice_x = CalculateSegment(uv.x, viewCount_x);
-                int slice_y = CalculateSegment(uv.y, viewCount_y);
-                int slice = slice_x + slice_y * viewCount_x;
+                int slice_x = CalculateSegment(uv.x, _ViewCountX);
+                int slice_y = CalculateSegment(uv.y, _ViewCountY);
+                int slice = slice_x + slice_y * _ViewCountX;
 
-                uv.x = (uv.x - slice_x * (1.0 / viewCount_x)) * viewCount_x;
-                uv.y = 1.0f - (uv.y - slice_y * (1.0 / viewCount_y)) * viewCount_y;
+                uv.x = (uv.x - slice_x * (1.0 / _ViewCountX)) * _ViewCountX;
+                uv.y = 1.0f - (uv.y - slice_y * (1.0 / _ViewCountY)) * _ViewCountY;
 
                 half4 color = SAMPLE_TEXTURE2D_ARRAY(_ColorRTArray, sampler_ColorRTArray, uv, slice);
 

@@ -1,4 +1,4 @@
-Shader "Multiview/MVRUnlit"
+Shader "Multiview/MVRNormal"
 {
     Properties
     {
@@ -25,6 +25,7 @@ Shader "Multiview/MVRUnlit"
             struct appdata
             {
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
                 float2 uv : TEXCOORD0;
                 #ifdef MULTIVIEW_PASS
                 uint instanceID : SV_InstanceID;
@@ -35,6 +36,7 @@ Shader "Multiview/MVRUnlit"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float3 normal : NORMAL;
                 #ifdef MULTIVIEW_PASS
                 uint rtIndex : SV_RenderTargetArrayIndex;
                 #endif
@@ -53,6 +55,7 @@ Shader "Multiview/MVRUnlit"
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.normal = TransformObjectToWorldNormal(v.normal);
                 #ifdef MULTIVIEW_PASS
                 o.rtIndex = v.instanceID;
                 #endif
@@ -61,11 +64,8 @@ Shader "Multiview/MVRUnlit"
 
             half4 frag (v2f i) : SV_Target
             {
-                // sample the texture
-                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                col *= _Color;
-
-                return col;
+                half3 normalColor = normalize(i.normal) * 0.5 + 0.5;
+                return half4(normalColor, 1.0);
             }
             ENDHLSL
         }
