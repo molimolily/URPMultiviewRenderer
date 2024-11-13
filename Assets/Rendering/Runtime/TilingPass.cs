@@ -2,14 +2,14 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-public class CombineRTArrayPass : ScriptableRenderPass
+public class TilingPass : ScriptableRenderPass
 {
-    Material blitMat;
+    Material tilingMaterial;
     RTHandle colorRTArray;
 
-    public CombineRTArrayPass(Material blitMaterial)
+    public TilingPass(Material tilingMaterial)
     {
-        blitMat = blitMaterial;
+        this.tilingMaterial = tilingMaterial;
         renderPassEvent = RenderPassEvent.AfterRendering;
         ConfigureInput(ScriptableRenderPassInput.Color);
     }
@@ -21,7 +21,7 @@ public class CombineRTArrayPass : ScriptableRenderPass
 
     public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
     {
-        CommandBuffer cmd = CommandBufferPool.Get("CombineRTArrayPass");
+        CommandBuffer cmd = CommandBufferPool.Get("TilingPass");
 
         // インスタンス数のリセット
         cmd.SetInstanceMultiplier(1);
@@ -30,11 +30,11 @@ public class CombineRTArrayPass : ScriptableRenderPass
         Rect camRect = renderingData.cameraData.camera.pixelRect;
         cmd.SetViewport(camRect);
 
-        // Blit処理
-        if (blitMat != null && colorRTArray != null)
+        // TextureArrayのタイリング
+        if (tilingMaterial != null && colorRTArray != null)
         {
-            blitMat.SetTexture("_ColorRTArray", colorRTArray.rt);
-            cmd.DrawProcedural(Matrix4x4.identity, blitMat, 0, MeshTopology.Triangles, 3, 1);
+            tilingMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
+            cmd.DrawProcedural(Matrix4x4.identity, tilingMaterial, 0, MeshTopology.Triangles, 3, 1);
         }
 
         context.ExecuteCommandBuffer(cmd);

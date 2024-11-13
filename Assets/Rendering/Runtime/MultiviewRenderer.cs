@@ -7,13 +7,13 @@ public class MultiviewRenderer : ScriptableRenderer
 {
     MultiviewRendererData rendererData;
     MultiviewRenderPass multiviewRenderPass;
-    CombineRTArrayPass combinedRTArrayPass;
+    TilingPass tilingPass;
 
     RTHandle colorRTArray;
     RTHandle depthRTArray;
     Vector2Int currentResolution;
 
-    Material blitMat;
+    Material tilingMaterial;
     Vector2Int viewCount;
 
     public MultiviewRenderer(ScriptableRendererData data) : base(data)
@@ -29,8 +29,8 @@ public class MultiviewRenderer : ScriptableRenderer
         Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
 
 
-        blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitToCameraRT"));
-        combinedRTArrayPass = new CombineRTArrayPass(blitMat);
+        tilingMaterial = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/TilingRTArray"));
+        tilingPass = new TilingPass(tilingMaterial);
     }
 
     public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -72,16 +72,16 @@ public class MultiviewRenderer : ScriptableRenderer
         multiviewRenderPass.SetTarget(colorRTArray, depthRTArray);
 
         // レンダーテクスチャの設定
-        combinedRTArrayPass.SetInput(colorRTArray);
+        tilingPass.SetInput(colorRTArray);
 
         // passの追加
         EnqueuePass(multiviewRenderPass);
-        EnqueuePass(combinedRTArrayPass);
+        EnqueuePass(tilingPass);
     }
 
     protected override void Dispose(bool disposing)
     {
-        CoreUtils.Destroy(blitMat);
+        CoreUtils.Destroy(tilingMaterial);
 
         colorRTArray?.Release();
         depthRTArray?.Release();

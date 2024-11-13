@@ -1,4 +1,4 @@
-Shader "Hidden/BlitToCameraRT"
+Shader "Hidden/TilingRTArray"
 {
     SubShader
     {
