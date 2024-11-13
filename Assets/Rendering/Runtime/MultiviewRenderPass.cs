@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -8,7 +6,7 @@ public class MultiviewRenderPass : ScriptableRenderPass
 {
     static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
 
-    public uint viewCount = 1;
+    public Vector2Int viewCount;
 
     RTHandle colorRtArray;
     RTHandle depthRtArray;
@@ -26,8 +24,11 @@ public class MultiviewRenderPass : ScriptableRenderPass
         // shader keywordの設定
         cmd.EnableKeyword(multiview_Keyword);
 
+        cmd.SetGlobalInt("_ViewCountX", viewCount.x);
+        cmd.SetGlobalInt("_ViewCountY", viewCount.y);
+
         // 視点数だけインスタンス数を乗算
-        cmd.SetInstanceMultiplier(viewCount);
+        cmd.SetInstanceMultiplier((uint)(viewCount.x * viewCount.y));
     }
 
     public void SetTarget(RTHandle color, RTHandle depth)

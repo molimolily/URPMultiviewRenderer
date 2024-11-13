@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -16,6 +14,7 @@ public class MultiviewRenderer : ScriptableRenderer
     Vector2Int currentResolution;
 
     Material blitMat;
+    Vector2Int viewCount;
 
     public MultiviewRenderer(ScriptableRendererData data) : base(data)
     {
@@ -23,7 +22,12 @@ public class MultiviewRenderer : ScriptableRenderer
         multiviewRenderPass = new MultiviewRenderPass();
 
         // éãì_êîÇÃê›íË
-        multiviewRenderPass.viewCount = 4;
+        viewCount = new Vector2Int(40, 20);
+        multiviewRenderPass.viewCount = viewCount;
+
+        int maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices: 0;
+        Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
+
 
         blitMat = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/BlitToCameraRT"));
         combinedRTArrayPass = new CombineRTArrayPass(blitMat);
@@ -42,9 +46,9 @@ public class MultiviewRenderer : ScriptableRenderer
             depthRTArray?.Release();
 
             colorRTArray = RTHandles.Alloc(
-                    width: camTexDesc.width / 2,
-                    height: camTexDesc.height / 2,
-                    slices: 4,
+                    width: camTexDesc.width / viewCount.x,
+                    height: camTexDesc.height / viewCount.y,
+                    slices: viewCount.x * viewCount.y,
                     depthBufferBits: DepthBits.None,
                     colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
                     filterMode: FilterMode.Bilinear,
@@ -52,9 +56,9 @@ public class MultiviewRenderer : ScriptableRenderer
                     );
 
             depthRTArray = RTHandles.Alloc(
-                width: camTexDesc.width / 2,
-                height: camTexDesc.height / 2,
-                slices: 4,
+                width: camTexDesc.width / viewCount.x,
+                height: camTexDesc.height / viewCount.y,
+                slices: viewCount.x * viewCount.y,
                 depthBufferBits: DepthBits.Depth32,
                 colorFormat: GraphicsFormat.R32_SFloat,
                 filterMode: FilterMode.Point,
