@@ -1,4 +1,4 @@
-Shader "Hidden/TilingRTArray"
+Shader "Merge/TilingRTArray"
 {
     SubShader
     {

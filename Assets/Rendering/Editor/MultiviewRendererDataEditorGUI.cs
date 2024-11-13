@@ -1,10 +1,13 @@
 using UnityEditor;
 
-[CustomEditor(typeof(MultiviewRendererData))]
-public class MultiviewRendererDataEditorGUI : Editor
+namespace MVR
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(MultiviewRendererData))]
+    public class MultiviewRendererDataEditorGUI : Editor
     {
-        base.OnInspectorGUI();
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+        }
     }
 }

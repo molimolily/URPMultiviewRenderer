@@ -20,3 +20,4 @@ MonoBehaviour:
   m_UseNativeRenderPass: 0
   viewCount: {x: 40, y: 20}
   viewResolution: {x: 40, y: 40}
+  mergeShder: {fileID: 4800000, guid: da1091ef7f7e2cc409fa4874728ec85f, type: 3}
