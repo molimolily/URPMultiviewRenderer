@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
@@ -18,6 +19,8 @@ namespace MVR
         Material mergeMaterial;
         Vector2Int viewCount;
         Vector2Int viewResolution;
+
+        Dictionary<Camera, ICameraPayload> payloadCache = new Dictionary<Camera, ICameraPayload>();
 
         public MultiviewRenderer(Vector2Int viewCount, Vector2Int viewResolution, Shader mergeShader, ScriptableRendererData data) : base(data)
         {
@@ -50,6 +53,20 @@ namespace MVR
             ref CameraData cameraData = ref renderingData.cameraData;
             RenderTextureDescriptor camTexDesc = cameraData.cameraTargetDescriptor;
             Vector2Int resolution = new Vector2Int(camTexDesc.width, camTexDesc.height);
+
+            // カメラごとのペイロードを取得
+            if(!payloadCache.TryGetValue(cameraData.camera, out ICameraPayload payload))
+            {
+                payload = cameraData.camera.GetComponent<ICameraPayload>();
+                payloadCache.Add(cameraData.camera, payload);
+            }
+
+            // ペイロードがnullの場合はレンダリングを行わない
+            if (payload == null)
+            {
+                Debug.LogWarning("ICameraPayload is not attached to the camera. Rendering is not performed.");
+                return;
+            }
 
             // レンダーターゲットがnull、または解像度が変更された場合にレンダーターゲットを確保
             if (colorRTArray == null || depthRTArray == null || currentResolution != resolution)
