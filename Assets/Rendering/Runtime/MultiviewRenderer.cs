@@ -15,20 +15,26 @@ public class MultiviewRenderer : ScriptableRenderer
 
     Material tilingMaterial;
     Vector2Int viewCount;
+    Vector2Int viewResolution;
 
-    public MultiviewRenderer(ScriptableRendererData data) : base(data)
+    public MultiviewRenderer(ScriptableRendererData data, Vector2Int viewCount, Vector2Int viewResolution) : base(data)
     {
         rendererData = data as MultiviewRendererData;
+
+        // マルチビューレンダーパス
         multiviewRenderPass = new MultiviewRenderPass();
 
         // 視点数の設定
-        viewCount = new Vector2Int(40, 20);
+        this.viewCount = viewCount;
         multiviewRenderPass.viewCount = viewCount;
+
+        // 視点解像度の設定
+        this.viewResolution = viewResolution;
 
         int maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices: 0;
         Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
 
-
+        // タイリングパス
         tilingMaterial = CoreUtils.CreateEngineMaterial(Shader.Find("Hidden/TilingRTArray"));
         tilingPass = new TilingPass(tilingMaterial);
     }
@@ -46,8 +52,8 @@ public class MultiviewRenderer : ScriptableRenderer
             depthRTArray?.Release();
 
             colorRTArray = RTHandles.Alloc(
-                    width: camTexDesc.width / viewCount.x,
-                    height: camTexDesc.height / viewCount.y,
+                    width: viewResolution.x,
+                    height: viewResolution.y,
                     slices: viewCount.x * viewCount.y,
                     depthBufferBits: DepthBits.None,
                     colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
@@ -56,8 +62,8 @@ public class MultiviewRenderer : ScriptableRenderer
                     );
 
             depthRTArray = RTHandles.Alloc(
-                width: camTexDesc.width / viewCount.x,
-                height: camTexDesc.height / viewCount.y,
+                width: viewResolution.x,
+                height: viewResolution.y,
                 slices: viewCount.x * viewCount.y,
                 depthBufferBits: DepthBits.Depth32,
                 colorFormat: GraphicsFormat.R32_SFloat,

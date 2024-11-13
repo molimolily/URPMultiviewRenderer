@@ -18,4 +18,5 @@ MonoBehaviour:
   m_RendererFeatures: []
   m_RendererFeatureMap: 
   m_UseNativeRenderPass: 0
-  backgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  viewCount: {x: 40, y: 20}
+  viewResolution: {x: 40, y: 40}
