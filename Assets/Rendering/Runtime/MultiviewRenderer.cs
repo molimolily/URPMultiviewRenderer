@@ -12,13 +12,9 @@ namespace MVR
         MultiviewRenderPass multiviewRenderPass;
         MergeRTArrayPass mergeRTArrayPass;
 
-        RTHandle colorRTArray;
-        RTHandle depthRTArray;
-        Vector2Int currentResolution;
-
         Material mergeMaterial;
-        Vector2Int viewCount;
-        Vector2Int viewResolution;
+
+        Vector2Int currentResolution;
 
         Dictionary<Camera, ICameraPayload> payloadCache = new Dictionary<Camera, ICameraPayload>();
 
@@ -28,13 +24,6 @@ namespace MVR
 
             // マルチビューレンダーパス
             multiviewRenderPass = new MultiviewRenderPass();
-
-            // 視点数の設定
-            this.viewCount = viewCount;
-            multiviewRenderPass.viewCount = viewCount;
-
-            // 視点解像度の設定
-            this.viewResolution = viewResolution;
 
             int maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 0;
             Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
@@ -68,40 +57,45 @@ namespace MVR
                 return;
             }
 
-            // レンダーターゲットがnull、または解像度が変更された場合にレンダーターゲットを確保
-            if (colorRTArray == null || depthRTArray == null || currentResolution != resolution)
+#if UNITY_EDITOR
+            // スライス数と視点数のチェック
+            if (payload.ViewCount.x * payload.ViewCount.y > SystemInfo.maxTextureArraySlices)
             {
-                colorRTArray?.Release();
-                depthRTArray?.Release();
+                Debug.LogWarning("The number of slices exceeds the maximum number of slices supported by the device.");
+                return;
+            }
+#endif
 
-                colorRTArray = RTHandles.Alloc(
-                        width: viewResolution.x,
-                        height: viewResolution.y,
-                        slices: viewCount.x * viewCount.y,
-                        depthBufferBits: DepthBits.None,
-                        colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
-                        filterMode: FilterMode.Bilinear,
-                        dimension: TextureDimension.Tex2DArray
-                        );
+            // レンダーターゲットの生成
+            if (payload.ColorTarget == null || payload.DepthTarget == null)
+            {
+                Debug.Log("Generate Render Target");
+                payload.GenerateRenderTarget(resolution.x, resolution.y);
+            }
 
-                depthRTArray = RTHandles.Alloc(
-                    width: viewResolution.x,
-                    height: viewResolution.y,
-                    slices: viewCount.x * viewCount.y,
-                    depthBufferBits: DepthBits.Depth32,
-                    colorFormat: GraphicsFormat.R32_SFloat,
-                    filterMode: FilterMode.Point,
-                    dimension: TextureDimension.Tex2DArray
-                    );
+            // 視点数とスライス数が異なる場合はレンダーターゲットを再確保
+            if (payload.ColorTarget.rt.volumeDepth != payload.ViewCount.x * payload.ViewCount.y)
+            {
+                Debug.Log("Reallocate Render Target");
+                payload.GenerateRenderTarget(resolution.x, resolution.y);
+            }
 
+            // スクリーンリサイズ時の処理
+            if (currentResolution.x != resolution.x || currentResolution.y != resolution.y)
+            {
+                Debug.Log("Screen Resize");
                 currentResolution = resolution;
+                payload.OnScreenResize(resolution.x, resolution.y);
             }
 
             // レンダーターゲットの設定
-            multiviewRenderPass.SetTarget(colorRTArray, depthRTArray);
+            multiviewRenderPass.SetTarget(payload.ColorTarget, payload.DepthTarget);
+
+            // 視点数の設定
+            multiviewRenderPass.viewCount = payload.ViewCount;
 
             // レンダーテクスチャの設定
-            mergeRTArrayPass.SetInput(colorRTArray);
+            mergeRTArrayPass.SetInput(payload.ColorTarget);
 
             // passの追加
             EnqueuePass(multiviewRenderPass);
@@ -111,9 +105,6 @@ namespace MVR
         protected override void Dispose(bool disposing)
         {
             CoreUtils.Destroy(mergeMaterial);
-
-            colorRTArray?.Release();
-            depthRTArray?.Release();
         }
     }
 
