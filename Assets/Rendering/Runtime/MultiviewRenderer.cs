@@ -20,7 +20,7 @@ namespace MVR
         Vector2Int viewCount;
         Vector2Int viewResolution;
 
-        Dictionary<Camera, ICameraPayload> payloadCache = new Dictionary<Camera, ICameraPayload>();
+        Dictionary<int, ICameraPayload> cameraPayloadCache = new Dictionary<int, ICameraPayload>();
 
         public MultiviewRenderer(Vector2Int viewCount, Vector2Int viewResolution, Shader mergeShader, ScriptableRendererData data) : base(data)
         {
@@ -54,11 +54,12 @@ namespace MVR
             RenderTextureDescriptor camTexDesc = cameraData.cameraTargetDescriptor;
             Vector2Int resolution = new Vector2Int(camTexDesc.width, camTexDesc.height);
 
+            int cameraID = cameraData.camera.GetHashCode();
             // カメラごとのペイロードを取得
-            if(!payloadCache.TryGetValue(cameraData.camera, out ICameraPayload payload))
+            if (!cameraPayloadCache.TryGetValue(cameraID, out ICameraPayload payload))
             {
                 payload = cameraData.camera.GetComponent<ICameraPayload>();
-                payloadCache.Add(cameraData.camera, payload);
+                cameraPayloadCache.Add(cameraID, payload);
             }
 
             // ペイロードがnullの場合はレンダリングを行わない
