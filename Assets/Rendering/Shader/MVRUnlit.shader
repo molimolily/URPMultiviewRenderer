@@ -15,7 +15,6 @@ Shader "Multiview/MVRUnlit"
             NAME "MULTIVIEW"
 
             HLSLPROGRAM
-            #pragma target 5.0
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile MULTIVIEW_PASS

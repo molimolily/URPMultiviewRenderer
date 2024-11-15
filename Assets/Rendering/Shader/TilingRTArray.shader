@@ -12,7 +12,6 @@ Shader "Merge/TilingRTArray"
             HLSLPROGRAM
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            #pragma target 5.0
             #pragma vertex Vert
             #pragma fragment frag
             #pragma require 2darray
