@@ -5,19 +5,47 @@ using UnityEngine.Rendering;
 
 namespace MVR
 {
+    /// <summary>
+    /// カメラのペイロードを定義するインターフェース
+    /// </summary>
     public interface ICameraPayload
     {
-        // 視点数
+        /// <summary>
+        /// 視点数
+        /// </summary>
         Vector2Int ViewCount { get; }
 
-        // 各視点のビュー行列
+        /// <summary>
+        /// 各視点のビュー行列
+        /// </summary>
         List<Matrix4x4> ViewMatrices { get; }
 
-        // 各視点のプロジェクション行列
+        /// <summary>
+        /// 各視点のプロジェクション行列
+        /// </summary>
         List<Matrix4x4> ProjectionMatrices { get; }
 
-        // レンダーターゲット
+        /// <summary>
+        /// カラーレンダーターゲット
+        /// </summary>
         RTHandle ColorTarget { get; }
+
+        /// <summary>
+        /// デプスレンダーターゲット
+        /// </summary>
         RTHandle DepthTarget { get; }
+
+        /// <summary>
+        /// 画面リサイズ時の処理を行う
+        /// </summary>
+        /// <param name="width">新しい画面の幅</param>
+        /// <param name="height">新しい画面の高さ</param>
+        void OnScreenResize(int width, int height);
+
+        /// <summary>
+        /// レンダーターゲットの生成処理を行う
+        /// レンダーターゲットの初期化時、または描画処理前にレンダーターゲットがnullの場合に呼び出される
+        /// </summary>
+        void GenerateRenderTarget(int width, int height);
     }
 }
