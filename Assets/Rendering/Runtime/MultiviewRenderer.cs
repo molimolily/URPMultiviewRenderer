@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.Universal.Internal;
 
 namespace MVR
 {
@@ -18,7 +19,9 @@ namespace MVR
 
         Dictionary<int, ICameraPayload> cameraPayloadCache = new Dictionary<int, ICameraPayload>();
 
-        public MultiviewRenderer(Vector2Int viewCount, Vector2Int viewResolution, Shader mergeShader, ScriptableRendererData data) : base(data)
+        ForwardLights forwardLights;
+
+        public MultiviewRenderer(Shader mergeShader, ScriptableRendererData data) : base(data)
         {
             rendererData = data as MultiviewRendererData;
 
@@ -35,6 +38,9 @@ namespace MVR
 
             // マージパス
             mergeRTArrayPass = new MergeRTArrayPass(mergeMaterial);
+
+            // ライティングの設定
+            forwardLights = new ForwardLights();
         }
 
         public override void Setup(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -101,6 +107,17 @@ namespace MVR
             // passの追加
             EnqueuePass(multiviewRenderPass);
             EnqueuePass(mergeRTArrayPass);
+        }
+
+        public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)
+        {
+            // forwardLights.Setup(context, ref renderingData);
+        }
+
+        public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)
+        {
+            cullingParameters.maximumVisibleLights = UniversalRenderPipeline.maxVisibleAdditionalLights + 1;
+            cullingParameters.shadowDistance = cameraData.maxShadowDistance;
         }
 
         protected override void Dispose(bool disposing)
