@@ -174,7 +174,8 @@ Varyings LitPassVertex(Attributes input)
 #ifdef DYNAMICLIGHTMAP_ON
     output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
-    OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
+    // OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
+    output.vertexSH = SampleSHVertex(output.normalWS.xyz);
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 #else
@@ -235,6 +236,7 @@ void LitPassFragment(
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
     color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
 
+    color = half4(0.0, 0.0, 0.0, 1.0);
     // outColor = color;
     
     // playground
@@ -251,12 +253,77 @@ void LitPassFragment(
 
     LightingData lightingData = CreateLightingData(inputData, surfaceData);
 
-    // ここらへんから異なっている
+    // ここらへんから異なっている (bakedGI)
     lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
     
-    color = half4(lightingData.giColor, 1.0);
+    // bakedGIの生成 input.vertexSHとinputData.normalWSのどちらかあるいは両方がおかしい, vertexSHはnormalWSに依存してそう, GlobalIlluminationがおかしい
+    // half3 debugBakedGI = SampleSHPixel(input.vertexSH, inputData.normalWS);
+    // color = half4(debugBakedGI, 1.0);
+    
+    // これらのパラメータが違いそう, SampleSHが悪さをしているかもしれない
+    // color = unity_SHAr; // 違う
+    // color = unity_SHAg; // 違う
+    // color = unity_SHAb; // 違う
+    // color = unity_SHBr; // 違う
+    // color = unity_SHBg; // 違う
+    color = unity_SHBb; // 違う
+    // color = unity_SHC; // 違う
+    
+    
+    
+    // color = half4(surfaceData.albedo, 1.0);
+    // color = half4(surfaceData.specular, 1.0);
+    // color = half4(surfaceData.metallic, 0.0, 0.0, 1.0);
+    // color = half4(surfaceData.smoothness, 0.0, 0.0, 1.0);
+    // color = half4(surfaceData.emission, 1.0);
+    // color = half4(surfaceData.normalTS, 1.0);
+    // color = half4(surfaceData.occlusion, 0.0, 0.0, 1.0);
+    // color = half4(surfaceData.alpha, 0.0, 0.0, 1.0);
+    // color = half4(surfaceData.clearCoatMask, 0.0, 0.0, 1.0);
+    // color = half4(surfaceData.clearCoatSmoothness, 0.0, 0.0, 1.0);
+    // color = half4(input.positionWS, 1.0);
+    // color = inputData.positionCS;
+    // color = half4(inputData.normalWS, 1.0);
+    // color = half4(inputData.viewDirectionWS, 1.0);
+    // color = inputData.shadowCoord; // 違う
+    // color = half4(inputData.fogCoord, 0.0, 0.0, 1.0);
+    // color = half4(inputData.vertexLighting, 1.0);
+    // color = half4(inputData.bakedGI, 1.0); // 違う
+    // color = half4(inputData.normalizedScreenSpaceUV, 0.0, 1.0); // 若干暗い
+    // color = inputData.shadowMask;
+    // color = half4(inputData.tangentToWorld[0], 1.0);
+    // color = half4(inputData.tangentToWorld[1], 1.0);
+    // color = half4(inputData.tangentToWorld[2], 1.0);
+    
+    // color = half4(input.uv, 0.0, 1.0);
+    // color = half4(input.positionWS, 1.0);
+    // color = half4(input.normalWS, 1.0);
+#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
+    // color = input.tangentWS // 使えない?
+#endif
+#ifdef _ADDITIONAL_LIGHTS_VERTEX
+    // color = input.fogFactorAndVertexLight; // 使えない?
+#endif
+    // color = half4(input.fogFactor, 0.0, 0.0, 1.0);
+#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+    // color = input.shadowCoord; // 違う
+#endif
+#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
+    // color = half4(input.viewDirTS, 1.0); // 使えない？
+#endif
+#if defined(LIGHTMAP_ON)
+    // color = half4(input.staticLightmapUV, 0.0, 1.0);
+#else
+    // color = half4(input.vertexSH, 1.0); // ライトマップがオフの場合はこれ
+#endif
+#ifdef DYNAMICLIGHTMAP_ON
+    // color = half4(input.dynamicLightmapUV, 0.0, 1.0); // 使えない？
+#endif
+    // color = input.positionCS;
+    // color = half4(aoFactor.indirectAmbientOcclusion, 0.0, 0.0, 1.0);
+    // color = half4(lightingData.giColor, 1.0);
     outColor = color;
 
 #ifdef _WRITE_RENDERING_LAYERS
