@@ -107,7 +107,7 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 #if defined(DYNAMICLIGHTMAP_ON)
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
 #else
-    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
+    // inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
 #endif
 
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
@@ -175,7 +175,8 @@ Varyings LitPassVertex(Attributes input)
     output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
     // OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
-    output.vertexSH = SampleSHVertex(output.normalWS.xyz);
+    // output.vertexSH = SampleSHVertex(output.normalWS.xyz);
+    output.vertexSH = SampleSH(output.normalWS.xyz);
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 #else
@@ -232,14 +233,20 @@ void LitPassFragment(
     ApplyDecalToSurfaceData(input.positionCS, surfaceData, inputData);
 #endif
 
-    half4 color = UniversalFragmentPBR(inputData, surfaceData);
-    color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
+    // half4 color = UniversalFragmentPBR(inputData, surfaceData);
+    // color.rgb = MixFog(color.rgb, inputData.fogCoord);
+    // color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
 
-    color = half4(0.0, 0.0, 0.0, 1.0);
+    half4 color = half4(0.0, 0.0, 0.0, 1.0);
     // outColor = color;
     
     // playground
+#if defined(_SPECULARHIGHLIGHTS_OFF)
+    bool specularHighlightsOff = true;
+#else
+    bool specularHighlightsOff = false;
+    #endif
+    
     BRDFData brdfData;
     InitializeBRDFData(surfaceData, brdfData);
     
@@ -258,8 +265,28 @@ void LitPassFragment(
                                               inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
                                               inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
     
+    /*lightingData.mainLightColor = LightingPhysicallyBased(brdfData, brdfDataClearCoat,
+                                                              mainLight,
+                                                              inputData.normalWS, inputData.viewDirectionWS,
+                                                              surfaceData.clearCoatMask, specularHighlightsOff);
+    */
+    half NdotL = saturate(dot(inputData.normalWS, mainLight.direction));
+    // color = half4(NdotL, 0.0, 0.0, 1.0);
+    half3 lightColor = mainLight.color;
+    // color = half4(lightColor, 1.0);
+    half lightAttenuation = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
+    // color = half4(mainLight.distanceAttenuation, 0.0, 0.0, 1.0); // à·Ç§
+    // color = half4(mainLight.shadowAttenuation, 0.0, 0.0, 1.0); // à·Ç§
+    color = half4(lightAttenuation, 0.0, 0.0, 1.0); // à·Ç§
+    half3 radiance = lightColor * (lightAttenuation * NdotL);
+    // color = half4(radiance, 1.0); // à·Ç§
+    half3 brdf = brdfData.diffuse;
+    // color = half4(lightingData.giColor, 1.0);
+    // color = half4(lightingData.mainLightColor, 1.0);
+    
     // bakedGIÇÃê∂ê¨ input.vertexSHÇ∆inputData.normalWSÇÃÇ«ÇøÇÁÇ©Ç†ÇÈÇ¢ÇÕóºï˚Ç™Ç®Ç©ÇµÇ¢, vertexSHÇÕnormalWSÇ…àÀë∂ÇµÇƒÇªÇ§, GlobalIlluminationÇ™Ç®Ç©ÇµÇ¢
     // half3 debugBakedGI = SampleSHPixel(input.vertexSH, inputData.normalWS);
+    color = half4(input.vertexSH, 1.0);
     // color = half4(debugBakedGI, 1.0);
     
     // Ç±ÇÍÇÁÇÃÉpÉâÉÅÅ[É^Ç™à·Ç¢ÇªÇ§, SampleSHÇ™à´Ç≥ÇÇµÇƒÇ¢ÇÈÇ©Ç‡ÇµÇÍÇ»Ç¢
@@ -268,10 +295,19 @@ void LitPassFragment(
     // color = unity_SHAb; // à·Ç§
     // color = unity_SHBr; // à·Ç§
     // color = unity_SHBg; // à·Ç§
-    color = unity_SHBb; // à·Ç§
+    // color = unity_SHBb; // à·Ç§
     // color = unity_SHC; // à·Ç§
     
-    
+    // color = half4(brdfData.albedo, 1.0);
+    // color = half4(brdfData.diffuse, 1.0);
+    // color = half4(brdfData.specular, 1.0);
+    // color = half4(brdfDataClearCoat.reflectivity, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.perceptualRoughness, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.roughness, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.roughness2, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.grazingTerm, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.normalizationTerm, 0.0, 0.0, 1.0);
+    // color = half4(brdfData.roughness2MinusOne, 0.0, 0.0, 1.0);
     
     // color = half4(surfaceData.albedo, 1.0);
     // color = half4(surfaceData.specular, 1.0);
