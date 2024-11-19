@@ -194,7 +194,8 @@ Varyings LitPassVertex(Attributes input)
     output.shadowCoord = GetShadowCoord(vertexInput);
 #endif
 
-    output.positionCS = vertexInput.positionCS;
+    // output.positionCS = vertexInput.positionCS;
+    output.positionCS = mul(MULTIVIEW_MATRIX_MVP(0), input.positionOS);
 
     return output;
 }

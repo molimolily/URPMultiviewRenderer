@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 410087040}
-  m_IndirectSpecularColor: {r: 0.17446308, g: 0.21819852, b: 0.30043814, a: 1}
+  m_IndirectSpecularColor: {r: 0.14182681, g: 0.15589496, b: 0.15364034, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -816,7 +816,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &2142121929
+--- !u!1001 &2096962693
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -877,7 +877,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 34eede772052598468fb8f991f29c117,
         type: 3}
       propertyPath: m_Name
-      value: adam
+      value: Adam
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -894,4 +894,4 @@ SceneRoots:
   - {fileID: 813883077}
   - {fileID: 673028833}
   - {fileID: 2023744672}
-  - {fileID: 2142121929}
+  - {fileID: 2096962693}

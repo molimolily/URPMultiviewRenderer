@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using Unity.Mathematics;
 
 namespace MVR
 {
@@ -14,8 +16,9 @@ namespace MVR
         // NOTE: 変更をEditorに即時反映させるためにはSerializeしない
         [NonSerialized] Vector2Int _viewCount = new Vector2Int(2, 2);
 
-        List<Matrix4x4> _viewMatrices = new List<Matrix4x4>();
-        List<Matrix4x4> _projectionMatrices = new List<Matrix4x4>();
+        List<PerViewData> perViewData = new List<PerViewData>();
+        GraphicsBuffer perViewDataBuffer;
+        static readonly int perViewDataID = Shader.PropertyToID("_PerViewData");
 
         RTHandle _colorTarget;
         RTHandle _depthTarget;
@@ -24,8 +27,6 @@ namespace MVR
 
         public int TotalViewCount => ViewCount.x * ViewCount.y;
 
-        public List<Matrix4x4> ViewMatrices => _viewMatrices;
-        public List<Matrix4x4> ProjectionMatrices => _projectionMatrices;
         public RTHandle ColorTarget => _colorTarget;
         public RTHandle DepthTarget => _depthTarget;
 
@@ -67,66 +68,62 @@ namespace MVR
             AllocateRenderTarget(width, height);
         }
 
-        void UpdateViewMatrices()
+        public void SetViewData(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            // ビュー行列の割当
-            if (ViewMatrices.Count != TotalViewCount)
+            // bufferの生成
+            if (perViewDataBuffer == null)
             {
-                if (ViewMatrices.Capacity < TotalViewCount)
+                perViewDataBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, TotalViewCount, PerViewData.Size);
+            }
+
+            // bufferの更新
+            perViewDataBuffer.SetData(perViewData);
+
+            // bufferの送信
+            CommandBuffer cmd = CommandBufferPool.Get();
+            using (new ProfilingScope(cmd, new ProfilingSampler("Set PerViewData")))
+            {
+                cmd.SetGlobalBuffer(perViewDataID, perViewDataBuffer);
+                context.ExecuteCommandBuffer(cmd);
+            }
+            CommandBufferPool.Release(cmd);
+        }
+
+        void UpdatePerViewData()
+        {
+            // PerViewDataの割当
+            if (perViewData.Count != TotalViewCount)
+            {
+                if (perViewData.Capacity < TotalViewCount)
                 {
-                    ViewMatrices.Capacity = TotalViewCount;
+                    perViewData.Capacity = TotalViewCount;
                 }
-                ViewMatrices.Clear();
+                perViewData.Clear();
                 for (int i = 0; i < TotalViewCount; i++)
                 {
-                    ViewMatrices.Add(Matrix4x4.identity);
+                    perViewData.Add(new PerViewData
+                    {
+                        viewMatrix = float4x4.identity,
+                        projectionMatrix = float4x4.identity
+                    });
                 }
             }
 
-            // ビュー行列の更新
+            // PerViewDataの更新
             for (int y = 0; y < ViewCount.y; y++)
             {
                 for (int x = 0; x < ViewCount.x; x++)
                 {
                     int index = x + y * ViewCount.x;
-                    var viewMatrix = cam.worldToCameraMatrix;
-                    ViewMatrices[index] = viewMatrix;
+                    perViewData[index] = new PerViewData
+                    {
+                        viewMatrix = cam.worldToCameraMatrix,
+                        projectionMatrix = GL.GetGPUProjectionMatrix(cam.projectionMatrix, true)
+                    };
                 }
             }
         }
 
-        void UpdateProjectionMatrices()
-        {
-            // プロジェクション行列の割当
-            if (ProjectionMatrices.Count != TotalViewCount)
-            {
-                if (ProjectionMatrices.Capacity < TotalViewCount)
-                {
-                    ProjectionMatrices.Capacity = TotalViewCount;
-                }
-                ProjectionMatrices.Clear();
-                for (int i = 0; i < TotalViewCount; i++)
-                {
-                    ProjectionMatrices.Add(Matrix4x4.identity);
-                }
-            }
-            // プロジェクション行列の更新
-            for (int y = 0; y < ViewCount.y; y++)
-            {
-                for (int x = 0; x < ViewCount.x; x++)
-                {
-                    int index = x + y * ViewCount.x;
-                    var projMatrix = cam.projectionMatrix;
-                    ProjectionMatrices[index] = projMatrix;
-                }
-            }
-        }
-
-        void UpdateMatrices()
-        {
-            UpdateViewMatrices();
-            UpdateProjectionMatrices();
-        }
 
         void Update()
         {
@@ -139,8 +136,8 @@ namespace MVR
 
         void LateUpdate()
         {
-            // 行列の更新
-            UpdateMatrices();
+            // PerViewDataの更新
+            UpdatePerViewData();
         }
 
         public void Dispose()
@@ -148,6 +145,7 @@ namespace MVR
             Debug.Log("Multiview Camera Payload Dispose");
             _colorTarget?.Release();
             _depthTarget?.Release();
+            perViewDataBuffer?.Release();
         }
     }
 }

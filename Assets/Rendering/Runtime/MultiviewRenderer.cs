@@ -21,6 +21,11 @@ namespace MVR
 
         ForwardLights forwardLights;
 
+        public static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
+
+        static readonly int viewMatricesID = Shader.PropertyToID("_Multiview_ViewMatrices");
+        static readonly int projectionMatricesID = Shader.PropertyToID("_Multiview_ProjectionMatrices");
+
         public MultiviewRenderer(Shader mergeShader, ScriptableRendererData data) : base(data)
         {
             rendererData = data as MultiviewRendererData;
@@ -101,12 +106,25 @@ namespace MVR
             // 視点数の設定
             multiviewRenderPass.viewCount = payload.ViewCount;
 
+            // ビューデータの設定
+            payload.SetViewData(context, ref renderingData);
+
             // レンダーテクスチャの設定
             mergeRTArrayPass.SetInput(payload.ColorTarget);
 
             // passの追加
             EnqueuePass(multiviewRenderPass);
             EnqueuePass(mergeRTArrayPass);
+
+            CommandBuffer cmd = CommandBufferPool.Get("Setup");
+            cmd.EnableKeyword(multiview_Keyword);
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
+        }
+
+        public override void FinishRendering(CommandBuffer cmd)
+        {
+            cmd.DisableKeyword(multiview_Keyword);
         }
 
         public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)

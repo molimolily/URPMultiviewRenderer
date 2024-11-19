@@ -7,8 +7,6 @@ namespace MVR
 
     public class MultiviewRenderPass : ScriptableRenderPass
     {
-        static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
-
         public Vector2Int viewCount;
 
         RTHandle colorRtArray;
@@ -25,7 +23,8 @@ namespace MVR
             ConfigureTarget(colorRtArray, depthRtArray);
 
             // shader keywordÇÃê›íË
-            cmd.EnableKeyword(multiview_Keyword);
+            // cmd.EnableKeyword(multiview_Keyword);
+            // cmd.DisableKeyword(multiview_Keyword);
 
             cmd.SetGlobalInt("_ViewCountX", viewCount.x);
             cmd.SetGlobalInt("_ViewCountY", viewCount.y);
@@ -92,9 +91,14 @@ namespace MVR
             context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
         }
 
+        public override void OnFinishCameraStackRendering(CommandBuffer cmd)
+        {
+            // cmd.DisableKeyword(multiview_Keyword);
+        }
+
         public override void FrameCleanup(CommandBuffer cmd)
         {
-            cmd.DisableKeyword(multiview_Keyword);
+            // cmd.DisableKeyword(multiview_Keyword);
             cmd.SetInstanceMultiplier(1);
         }
     }
