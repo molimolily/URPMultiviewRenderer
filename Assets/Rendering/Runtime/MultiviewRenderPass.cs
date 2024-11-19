@@ -74,6 +74,7 @@ namespace MVR
 
             DrawingSettings drawingSettings = new DrawingSettings(new ShaderTagId("SRPDefaultUnlit"), sortingSettings);
             drawingSettings.SetShaderPassName(1, new ShaderTagId("UniversalForward"));
+            drawingSettings.perObjectData = PerObjectData.LightProbe;
             FilteringSettings filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);

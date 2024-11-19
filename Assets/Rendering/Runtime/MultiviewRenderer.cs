@@ -107,30 +107,11 @@ namespace MVR
             // pass‚Ì’Ç‰Á
             EnqueuePass(multiviewRenderPass);
             EnqueuePass(mergeRTArrayPass);
-
-            /*SphericalHarmonicsL2 sh = RenderSettings.ambientProbe;
-
-            for (int i = 0; i < 3; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    Debug.Log($"SH[{i},{j}] = {sh[i, j]}");
-                }
-            }*/
         }
 
         public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             // forwardLights.Setup(context, ref renderingData);
-            // SHŒW”‚ÌÝ’è
-            SphericalHarmonicsL2 sh = RenderSettings.ambientProbe;
-            Shader.SetGlobalVector("_SHAr", new Vector4(sh[0, 3], sh[0, 1], sh[0, 2], sh[0, 0]));
-            Shader.SetGlobalVector("_SHAg", new Vector4(sh[0, 4], sh[0, 5], sh[0, 6], sh[0, 7]));
-            Shader.SetGlobalVector("_SHAb", new Vector4(sh[0, 8], sh[1, 0], sh[1, 1], sh[1, 2]));
-            Shader.SetGlobalVector("_SHBr", new Vector4(sh[1, 3], sh[1, 4], sh[1, 5], sh[1, 6]));
-            Shader.SetGlobalVector("_SHBg", new Vector4(sh[1, 7], sh[1, 8], sh[2, 0], sh[2, 1]));
-            Shader.SetGlobalVector("_SHBb", new Vector4(sh[2, 2], sh[2, 3], sh[2, 4], sh[2, 5]));
-            Shader.SetGlobalVector("_SHC", new Vector4(sh[2, 6], sh[2, 7], sh[2, 8], 1.0f));
         }
 
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)
