@@ -1,4 +1,4 @@
-Shader "Multiview/DebugSH"
+Shader "Multiview/Debug/SH"
 {
     SubShader
     {
@@ -15,10 +15,11 @@ Shader "Multiview/DebugSH"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-
+            #pragma multi_compile MULTIVIEW_PASS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SphericalHarmonics.hlsl"
+            #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"
 
             struct Attributes
             {
@@ -28,6 +29,7 @@ Shader "Multiview/DebugSH"
                 float2 texcoord     : TEXCOORD0;
                 float2 staticLightmapUV   : TEXCOORD1;
                 float2 dynamicLightmapUV  : TEXCOORD2;
+                MULTIVIEW_VERTEX_INPUT
             };
 
             struct Varyings
@@ -36,6 +38,7 @@ Shader "Multiview/DebugSH"
                 float3 positionWS               : TEXCOORD1;
                 float3 normalWS                 : TEXCOORD2;
                 float4 positionCS               : SV_POSITION;
+                MULTIVIEW_VERTEX_OUTPUT
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -66,6 +69,7 @@ Shader "Multiview/DebugSH"
             Varyings vert (Attributes input)
             {
                 Varyings output;
+                MULTIVIEW_ASSIGN_RTINDEX(output, input)
                 VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
                 VertexNormalInputs normalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 

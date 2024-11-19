@@ -1,10 +1,5 @@
-Shader "Multiview/MVRUnlit"
+Shader "Multiview/Debug/Normal"
 {
-    Properties
-    {
-        _MainTex ("Texture", 2D) = "white" {}
-        _Color ("Color", Color) = (1,1,1,1)
-    }
     SubShader
     {
         Tags { "LightMode" = "SRPDefaultUnlit" }
@@ -25,41 +20,30 @@ Shader "Multiview/MVRUnlit"
             struct appdata
             {
                 float4 vertex : POSITION;
-                float2 uv : TEXCOORD0;
+                float3 normal : NORMAL;
                 MULTIVIEW_VERTEX_INPUT
             };
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float3 normal : NORMAL;
                 MULTIVIEW_VERTEX_OUTPUT
             };
-
-            TEXTURE2D(_MainTex);
-            SAMPLER(sampler_MainTex);
-
-            CBUFFER_START(UnityPerMaterial)
-            float4 _MainTex_ST;
-            float4 _Color;
-            CBUFFER_END
 
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex.xyz);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.normal = TransformObjectToWorldNormal(v.normal);
                 MULTIVIEW_ASSIGN_RTINDEX(o, v)
                 return o;
             }
 
             half4 frag (v2f i) : SV_Target
             {
-                // sample the texture
-                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
-                col *= _Color;
-
-                return col;
+                half3 normalColor = normalize(i.normal) * 0.5 + 0.5;
+                return half4(normalColor, 1.0);
             }
             ENDHLSL
         }
