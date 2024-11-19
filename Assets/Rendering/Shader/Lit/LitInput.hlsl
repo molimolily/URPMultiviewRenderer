@@ -1,5 +1,5 @@
-#ifndef UNIVERSAL_LIT_INPUT_INCLUDED
-#define UNIVERSAL_LIT_INPUT_INCLUDED
+#ifndef MULITIVIEW_LIT_INPUT_INCLUDED
+#define MULITIVIEW_LIT_INPUT_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"

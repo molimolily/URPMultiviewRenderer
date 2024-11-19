@@ -111,7 +111,7 @@ namespace MVR
 
         public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            // forwardLights.Setup(context, ref renderingData);
+            forwardLights.Setup(context, ref renderingData);
         }
 
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)

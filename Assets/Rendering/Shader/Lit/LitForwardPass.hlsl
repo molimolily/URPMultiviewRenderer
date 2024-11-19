@@ -1,9 +1,9 @@
-#ifndef UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
-#define UNIVERSAL_FORWARD_LIT_PASS_INCLUDED
+#ifndef MULITIVIEW_FORWARD_LIT_PASS_INCLUDED
+#define MULITIVIEW_FORWARD_LIT_PASS_INCLUDED
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #if defined(LOD_FADE_CROSSFADE)
-    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
 #endif
 
 // GLES2 has limited amount of interpolators
@@ -19,24 +19,26 @@
 
 struct Attributes
 {
-    float4 positionOS   : POSITION;
-    float3 normalOS     : NORMAL;
-    float4 tangentOS    : TANGENT;
-    float2 texcoord     : TEXCOORD0;
-    float2 staticLightmapUV   : TEXCOORD1;
-    float2 dynamicLightmapUV  : TEXCOORD2;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
+    float4 positionOS : POSITION;
+    float3 normalOS : NORMAL;
+    float4 tangentOS : TANGENT;
+    float2 texcoord : TEXCOORD0;
+    float2 staticLightmapUV : TEXCOORD1;
+    float2 dynamicLightmapUV : TEXCOORD2;
+    // UNITY_VERTEX_INPUT_INSTANCE_ID
+    
+    MULTIVIEW_VERTEX_INPUT
 };
 
 struct Varyings
 {
-    float2 uv                       : TEXCOORD0;
+    float2 uv : TEXCOORD0;
 
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     float3 positionWS               : TEXCOORD1;
 #endif
 
-    float3 normalWS                 : TEXCOORD2;
+    float3 normalWS : TEXCOORD2;
 #if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
     half4 tangentWS                : TEXCOORD3;    // xyz: tangent, w: sign
 #endif
@@ -44,7 +46,7 @@ struct Varyings
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     half4 fogFactorAndVertexLight   : TEXCOORD5; // x: fogFactor, yzw: vertex light
 #else
-    half  fogFactor                 : TEXCOORD5;
+    half fogFactor : TEXCOORD5;
 #endif
 
 #if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
@@ -60,14 +62,15 @@ struct Varyings
     float2  dynamicLightmapUV : TEXCOORD9; // Dynamic lightmap UVs
 #endif
 
-    float4 positionCS               : SV_POSITION;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
-    UNITY_VERTEX_OUTPUT_STEREO
+    float4 positionCS : SV_POSITION;
+    // UNITY_VERTEX_INPUT_INSTANCE_ID
+    // UNITY_VERTEX_OUTPUT_STEREO
+    MULTIVIEW_VERTEX_OUTPUT
 };
 
 void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData)
 {
-    inputData = (InputData)0;
+    inputData = (InputData) 0;
 
 #if defined(REQUIRES_WORLD_SPACE_POS_INTERPOLATOR)
     inputData.positionWS = input.positionWS;
@@ -79,9 +82,9 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
     float3 bitangent = sgn * cross(input.normalWS.xyz, input.tangentWS.xyz);
     half3x3 tangentToWorld = half3x3(input.tangentWS.xyz, bitangent.xyz, input.normalWS.xyz);
 
-    #if defined(_NORMALMAP)
+#if defined(_NORMALMAP)
     inputData.tangentToWorld = tangentToWorld;
-    #endif
+#endif
     inputData.normalWS = TransformTangentToWorld(normalTS, tangentToWorld);
 #else
     inputData.normalWS = input.normalWS;
@@ -107,22 +110,22 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 #if defined(DYNAMICLIGHTMAP_ON)
     inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.dynamicLightmapUV, input.vertexSH, inputData.normalWS);
 #else
-    // inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
+    inputData.bakedGI = SAMPLE_GI(input.staticLightmapUV, input.vertexSH, inputData.normalWS);
 #endif
 
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(input.positionCS);
     inputData.shadowMask = SAMPLE_SHADOWMASK(input.staticLightmapUV);
 
-    #if defined(DEBUG_DISPLAY)
-    #if defined(DYNAMICLIGHTMAP_ON)
+#if defined(DEBUG_DISPLAY)
+#if defined(DYNAMICLIGHTMAP_ON)
     inputData.dynamicLightmapUV = input.dynamicLightmapUV;
-    #endif
-    #if defined(LIGHTMAP_ON)
+#endif
+#if defined(LIGHTMAP_ON)
     inputData.staticLightmapUV = input.staticLightmapUV;
-    #else
+#else
     inputData.vertexSH = input.vertexSH;
-    #endif
-    #endif
+#endif
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,11 +135,13 @@ void InitializeInputData(Varyings input, half3 normalTS, out InputData inputData
 // Used in Standard (Physically Based) shader
 Varyings LitPassVertex(Attributes input)
 {
-    Varyings output = (Varyings)0;
+    Varyings output = (Varyings) 0;
 
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_TRANSFER_INSTANCE_ID(input, output);
-    UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+    // UNITY_SETUP_INSTANCE_ID(input);
+    // UNITY_TRANSFER_INSTANCE_ID(input, output);
+    // UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+    
+    MULTIVIEW_ASSIGN_RTINDEX(output, input)
 
     VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS.xyz);
 
@@ -148,9 +153,9 @@ Varyings LitPassVertex(Attributes input)
     half3 vertexLight = VertexLighting(vertexInput.positionWS, normalInput.normalWS);
 
     half fogFactor = 0;
-    #if !defined(_FOG_FRAGMENT)
-        fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
-    #endif
+#if !defined(_FOG_FRAGMENT)
+    fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+#endif
 
     output.uv = TRANSFORM_TEX(input.texcoord, _BaseMap);
 
@@ -174,9 +179,7 @@ Varyings LitPassVertex(Attributes input)
 #ifdef DYNAMICLIGHTMAP_ON
     output.dynamicLightmapUV = input.dynamicLightmapUV.xy * unity_DynamicLightmapST.xy + unity_DynamicLightmapST.zw;
 #endif
-    // OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
-    // output.vertexSH = SampleSHVertex(output.normalWS.xyz);
-    output.vertexSH = SampleSH(output.normalWS.xyz);
+    OUTPUT_SH(output.normalWS.xyz, output.vertexSH);
 #ifdef _ADDITIONAL_LIGHTS_VERTEX
     output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 #else
@@ -205,8 +208,8 @@ void LitPassFragment(
 #endif
 )
 {
-    UNITY_SETUP_INSTANCE_ID(input);
-    UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+    // UNITY_SETUP_INSTANCE_ID(input);
+    // UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 
 #if defined(_PARALLAXMAP)
 #if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
@@ -233,133 +236,10 @@ void LitPassFragment(
     ApplyDecalToSurfaceData(input.positionCS, surfaceData, inputData);
 #endif
 
-    // half4 color = UniversalFragmentPBR(inputData, surfaceData);
-    // color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    // color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
+    half4 color = UniversalFragmentPBR(inputData, surfaceData);
+    color.rgb = MixFog(color.rgb, inputData.fogCoord);
+    color.a = OutputAlpha(color.a, IsSurfaceTypeTransparent(_Surface));
 
-    half4 color = half4(0.0, 0.0, 0.0, 1.0);
-    // outColor = color;
-    
-    // playground
-#if defined(_SPECULARHIGHLIGHTS_OFF)
-    bool specularHighlightsOff = true;
-#else
-    bool specularHighlightsOff = false;
-    #endif
-    
-    BRDFData brdfData;
-    InitializeBRDFData(surfaceData, brdfData);
-    
-    BRDFData brdfDataClearCoat = CreateClearCoatBRDFData(surfaceData, brdfData);
-    half4 shadowMask = CalculateShadowMask(inputData);
-    AmbientOcclusionFactor aoFactor = CreateAmbientOcclusionFactor(inputData, surfaceData);
-    uint meshRenderingLayers = GetMeshRenderingLayer();
-    Light mainLight = GetMainLight(inputData, shadowMask, aoFactor);
-    
-    MixRealtimeAndBakedGI(mainLight, inputData.normalWS, inputData.bakedGI);
-
-    LightingData lightingData = CreateLightingData(inputData, surfaceData);
-
-    // ここらへんから異なっている (bakedGI)
-    lightingData.giColor = GlobalIllumination(brdfData, brdfDataClearCoat, surfaceData.clearCoatMask,
-                                              inputData.bakedGI, aoFactor.indirectAmbientOcclusion, inputData.positionWS,
-                                              inputData.normalWS, inputData.viewDirectionWS, inputData.normalizedScreenSpaceUV);
-    
-    /*lightingData.mainLightColor = LightingPhysicallyBased(brdfData, brdfDataClearCoat,
-                                                              mainLight,
-                                                              inputData.normalWS, inputData.viewDirectionWS,
-                                                              surfaceData.clearCoatMask, specularHighlightsOff);
-    */
-    half NdotL = saturate(dot(inputData.normalWS, mainLight.direction));
-    // color = half4(NdotL, 0.0, 0.0, 1.0);
-    half3 lightColor = mainLight.color;
-    // color = half4(lightColor, 1.0);
-    half lightAttenuation = mainLight.distanceAttenuation * mainLight.shadowAttenuation;
-    // color = half4(mainLight.distanceAttenuation, 0.0, 0.0, 1.0); // 違う
-    // color = half4(mainLight.shadowAttenuation, 0.0, 0.0, 1.0); // 違う
-    color = half4(lightAttenuation, 0.0, 0.0, 1.0); // 違う
-    half3 radiance = lightColor * (lightAttenuation * NdotL);
-    // color = half4(radiance, 1.0); // 違う
-    half3 brdf = brdfData.diffuse;
-    // color = half4(lightingData.giColor, 1.0);
-    // color = half4(lightingData.mainLightColor, 1.0);
-    
-    // bakedGIの生成 input.vertexSHとinputData.normalWSのどちらかあるいは両方がおかしい, vertexSHはnormalWSに依存してそう, GlobalIlluminationがおかしい
-    // half3 debugBakedGI = SampleSHPixel(input.vertexSH, inputData.normalWS);
-    color = half4(input.vertexSH, 1.0);
-    // color = half4(debugBakedGI, 1.0);
-    
-    // これらのパラメータが違いそう, SampleSHが悪さをしているかもしれない
-    // color = unity_SHAr; // 違う
-    // color = unity_SHAg; // 違う
-    // color = unity_SHAb; // 違う
-    // color = unity_SHBr; // 違う
-    // color = unity_SHBg; // 違う
-    // color = unity_SHBb; // 違う
-    // color = unity_SHC; // 違う
-    
-    // color = half4(brdfData.albedo, 1.0);
-    // color = half4(brdfData.diffuse, 1.0);
-    // color = half4(brdfData.specular, 1.0);
-    // color = half4(brdfDataClearCoat.reflectivity, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.perceptualRoughness, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.roughness, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.roughness2, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.grazingTerm, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.normalizationTerm, 0.0, 0.0, 1.0);
-    // color = half4(brdfData.roughness2MinusOne, 0.0, 0.0, 1.0);
-    
-    // color = half4(surfaceData.albedo, 1.0);
-    // color = half4(surfaceData.specular, 1.0);
-    // color = half4(surfaceData.metallic, 0.0, 0.0, 1.0);
-    // color = half4(surfaceData.smoothness, 0.0, 0.0, 1.0);
-    // color = half4(surfaceData.emission, 1.0);
-    // color = half4(surfaceData.normalTS, 1.0);
-    // color = half4(surfaceData.occlusion, 0.0, 0.0, 1.0);
-    // color = half4(surfaceData.alpha, 0.0, 0.0, 1.0);
-    // color = half4(surfaceData.clearCoatMask, 0.0, 0.0, 1.0);
-    // color = half4(surfaceData.clearCoatSmoothness, 0.0, 0.0, 1.0);
-    // color = half4(input.positionWS, 1.0);
-    // color = inputData.positionCS;
-    // color = half4(inputData.normalWS, 1.0);
-    // color = half4(inputData.viewDirectionWS, 1.0);
-    // color = inputData.shadowCoord; // 違う
-    // color = half4(inputData.fogCoord, 0.0, 0.0, 1.0);
-    // color = half4(inputData.vertexLighting, 1.0);
-    // color = half4(inputData.bakedGI, 1.0); // 違う
-    // color = half4(inputData.normalizedScreenSpaceUV, 0.0, 1.0); // 若干暗い
-    // color = inputData.shadowMask;
-    // color = half4(inputData.tangentToWorld[0], 1.0);
-    // color = half4(inputData.tangentToWorld[1], 1.0);
-    // color = half4(inputData.tangentToWorld[2], 1.0);
-    
-    // color = half4(input.uv, 0.0, 1.0);
-    // color = half4(input.positionWS, 1.0);
-    // color = half4(input.normalWS, 1.0);
-#if defined(REQUIRES_WORLD_SPACE_TANGENT_INTERPOLATOR)
-    // color = input.tangentWS // 使えない?
-#endif
-#ifdef _ADDITIONAL_LIGHTS_VERTEX
-    // color = input.fogFactorAndVertexLight; // 使えない?
-#endif
-    // color = half4(input.fogFactor, 0.0, 0.0, 1.0);
-#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-    // color = input.shadowCoord; // 違う
-#endif
-#if defined(REQUIRES_TANGENT_SPACE_VIEW_DIR_INTERPOLATOR)
-    // color = half4(input.viewDirTS, 1.0); // 使えない？
-#endif
-#if defined(LIGHTMAP_ON)
-    // color = half4(input.staticLightmapUV, 0.0, 1.0);
-#else
-    // color = half4(input.vertexSH, 1.0); // ライトマップがオフの場合はこれ
-#endif
-#ifdef DYNAMICLIGHTMAP_ON
-    // color = half4(input.dynamicLightmapUV, 0.0, 1.0); // 使えない？
-#endif
-    // color = input.positionCS;
-    // color = half4(aoFactor.indirectAmbientOcclusion, 0.0, 0.0, 1.0);
-    // color = half4(lightingData.giColor, 1.0);
     outColor = color;
 
 #ifdef _WRITE_RENDERING_LAYERS

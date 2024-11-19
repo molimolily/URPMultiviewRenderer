@@ -60,14 +60,6 @@ Shader "Multiview/DebugSH"
                 SHCoefficients[5] = unity_SHBb;
                 SHCoefficients[6] = unity_SHC;
 
-                /*SHCoefficients[0] = _SHAr;
-                SHCoefficients[1] = _SHAg;
-                SHCoefficients[2] = _SHAb;
-                SHCoefficients[3] = _SHBr;
-                SHCoefficients[4] = _SHBg;
-                SHCoefficients[5] = _SHBb;
-                SHCoefficients[6] = _SHC;*/
-
                 return max(half3(0, 0, 0), SampleSH9(SHCoefficients, normalWS));
             }
 

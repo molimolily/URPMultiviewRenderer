@@ -160,13 +160,18 @@ Shader "Multiview/Lit"
             #pragma multi_compile_fragment _ DEBUG_DISPLAY
 
             //--------------------------------------
-            // GPU Instancing
-            #pragma multi_compile_instancing
-            #pragma instancing_options renderinglayer
-            #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+            // GPU Instancing ”ñ‘Î‰ž
+            // #pragma multi_compile_instancing
+            // #pragma instancing_options renderinglayer
+            // #include_with_pragmas "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DOTS.hlsl"
+
+            //--------------------------------------
+            // Multiview
+            #pragma multi_compile MULTIVIEW_PASS
 
             // #include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
             // #include "Packages/com.unity.render-pipelines.universal/Shaders/LitForwardPass.hlsl"
+            #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"
             #include "Assets/Rendering/Shader/Lit/LitInput.hlsl"
             #include "Assets/Rendering/Shader/Lit/LitForwardPass.hlsl"
             ENDHLSL

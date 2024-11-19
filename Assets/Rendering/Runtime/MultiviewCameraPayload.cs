@@ -12,7 +12,7 @@ namespace MVR
         Camera cam;
 
         // NOTE: •ÏX‚ğEditor‚É‘¦”½‰f‚³‚¹‚é‚½‚ß‚É‚ÍSerialize‚µ‚È‚¢
-        [NonSerialized] Vector2Int _viewCount = new Vector2Int(1, 1);
+        [NonSerialized] Vector2Int _viewCount = new Vector2Int(2, 2);
 
         List<Matrix4x4> _viewMatrices = new List<Matrix4x4>();
         List<Matrix4x4> _projectionMatrices = new List<Matrix4x4>();

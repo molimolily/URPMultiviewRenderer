@@ -20,23 +20,20 @@ Shader "Multiview/MVRUnlit"
             #pragma multi_compile MULTIVIEW_PASS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"
 
             struct appdata
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
-                #ifdef MULTIVIEW_PASS
-                uint instanceID : SV_InstanceID;
-                #endif
+                MULTIVIEW_VERTEX_INPUT
             };
 
             struct v2f
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
-                #ifdef MULTIVIEW_PASS
-                uint rtIndex : SV_RenderTargetArrayIndex;
-                #endif
+                MULTIVIEW_VERTEX_OUTPUT
             };
 
             TEXTURE2D(_MainTex);
@@ -52,9 +49,7 @@ Shader "Multiview/MVRUnlit"
                 v2f o;
                 o.vertex = TransformObjectToHClip(v.vertex.xyz);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                #ifdef MULTIVIEW_PASS
-                o.rtIndex = v.instanceID;
-                #endif
+                MULTIVIEW_ASSIGN_RTINDEX(o, v)
                 return o;
             }
 
