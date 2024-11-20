@@ -35,8 +35,8 @@ namespace MVR
             // TextureArray‚Ìƒ^ƒCƒŠƒ“ƒO
             if (mergeMaterial != null && colorRTArray != null)
             {
-                mergeMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
-                cmd.DrawProcedural(Matrix4x4.identity, mergeMaterial, 0, MeshTopology.Triangles, 3, 1);
+                // mergeMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
+                CoreUtils.DrawFullScreen(cmd, mergeMaterial);
             }
 
             context.ExecuteCommandBuffer(cmd);

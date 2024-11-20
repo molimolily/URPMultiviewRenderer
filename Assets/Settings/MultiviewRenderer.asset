@@ -18,6 +18,4 @@ MonoBehaviour:
   m_RendererFeatures: []
   m_RendererFeatureMap: 
   m_UseNativeRenderPass: 0
-  viewCount: {x: 2, y: 1}
-  viewResolution: {x: 500, y: 500}
-  mergeShder: {fileID: 4800000, guid: da1091ef7f7e2cc409fa4874728ec85f, type: 3}
+  mergeShader: {fileID: 4800000, guid: da1091ef7f7e2cc409fa4874728ec85f, type: 3}

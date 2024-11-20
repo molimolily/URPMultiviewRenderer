@@ -7,7 +7,7 @@ namespace MVR
 
     public class MultiviewRenderPass : ScriptableRenderPass
     {
-        static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
+        public static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
 
         public Vector2Int viewCount;
 
@@ -24,12 +24,9 @@ namespace MVR
             // レンダーターゲットの設定
             ConfigureTarget(colorRtArray, depthRtArray);
 
-            // shader keywordの設定
-            cmd.EnableKeyword(multiview_Keyword);
-
             cmd.SetGlobalInt("_ViewCountX", viewCount.x);
             cmd.SetGlobalInt("_ViewCountY", viewCount.y);
-
+            
             // 視点数だけインスタンス数を乗算
             cmd.SetInstanceMultiplier((uint)(viewCount.x * viewCount.y));
         }
@@ -42,15 +39,19 @@ namespace MVR
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get("Clear");
-
+            CommandBuffer cmd = CommandBufferPool.Get();
             Camera camera = renderingData.cameraData.camera;
 
-            // レンダーターゲットのクリア
-            ClearRenderTarget(cmd, camera);
+            using (new ProfilingScope(cmd, new ProfilingSampler("MultiviewPass-Setup")))
+            {
+                // レンダーターゲットのクリア
+                ClearRenderTarget(cmd, camera);
+
+                // keywordの有効化
+                cmd.SetKeyword(multiview_Keyword, true);
+            }
 
             context.ExecuteCommandBuffer(cmd);
-
             CommandBufferPool.Release(cmd);
 
             Render(context, ref renderingData);
@@ -74,6 +75,7 @@ namespace MVR
 
             DrawingSettings drawingSettings = new DrawingSettings(new ShaderTagId("SRPDefaultUnlit"), sortingSettings);
             drawingSettings.SetShaderPassName(1, new ShaderTagId("UniversalForward"));
+            drawingSettings.perObjectData = PerObjectData.LightProbe | PerObjectData.LightProbeProxyVolume | PerObjectData.Lightmaps | PerObjectData.LightData | PerObjectData.ReflectionProbes;
             FilteringSettings filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
 
             context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
@@ -91,9 +93,14 @@ namespace MVR
             context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings);
         }
 
+        public override void OnFinishCameraStackRendering(CommandBuffer cmd)
+        {
+            // keywordの無効化
+            cmd.SetKeyword(multiview_Keyword, false);
+        }
+
         public override void FrameCleanup(CommandBuffer cmd)
         {
-            cmd.DisableKeyword(multiview_Keyword);
             cmd.SetInstanceMultiplier(1);
         }
     }

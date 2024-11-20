@@ -25,9 +25,10 @@ SubShader {
 
         #include "UnityCG.cginc"
         #include "Lighting.cginc"
+        #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"
 
         #pragma multi_compile_local _SUNDISK_NONE _SUNDISK_SIMPLE _SUNDISK_HIGH_QUALITY
-        #pragma multi_compile MULTIVIEW_PASS
+        #pragma multi_compile _ MULTIVIEW_PASS
 
         uniform half _Exposure;     // HDR exposure
         uniform half3 _GroundColor;
@@ -136,9 +137,7 @@ SubShader {
         {
             float4 vertex : POSITION;
             // UNITY_VERTEX_INPUT_INSTANCE_ID
-        #ifdef MULTIVIEW_PASS
-            uint instanceID : SV_InstanceID;
-        #endif
+            MULTIVIEW_VERTEX_INPUT
         };
 
         struct v2f
@@ -164,9 +163,7 @@ SubShader {
         #endif
 
             // UNITY_VERTEX_OUTPUT_STEREO
-        #ifdef MULTIVIEW_PASS
-            uint rtIndex : SV_RenderTargetArrayIndex;
-        #endif
+            MULTIVIEW_VERTEX_OUTPUT
         };
 
 
@@ -181,9 +178,7 @@ SubShader {
             v2f OUT;
             // UNITY_SETUP_INSTANCE_ID(v);
             // UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
-        #ifdef MULTIVIEW_PASS
-            OUT.rtIndex = v.instanceID;
-        #endif
+            MULTIVIEW_ASSIGN_RTINDEX(OUT, v)
             OUT.pos = UnityObjectToClipPos(v.vertex);
 
             float3 kSkyTintInGammaSpace = COLOR_2_GAMMA(_SkyTint); // convert tint from Linear back to Gamma
