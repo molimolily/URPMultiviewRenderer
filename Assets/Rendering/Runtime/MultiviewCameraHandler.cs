@@ -9,7 +9,7 @@ using Unity.Mathematics;
 namespace MVR
 {
     [RequireComponent(typeof(Camera)), ExecuteAlways]
-    public class MultiviewCameraPayload : MonoBehaviour, ICameraPayload
+    public class MultiviewCameraHandler : MonoBehaviour, IMultiviewCameraHandler
     {
         Camera cam;
 

@@ -9,7 +9,7 @@ namespace MVR
     /// <summary>
     /// カメラのペイロードを定義するインターフェース
     /// </summary>
-    public interface ICameraPayload
+    public interface IMultiviewCameraHandler
     {
         /// <summary>
         /// 視点数
@@ -29,8 +29,8 @@ namespace MVR
         /// <summary>
         /// 画面リサイズ時の処理を行う
         /// </summary>
-        /// <param name="width">新しい画面の幅</param>
-        /// <param name="height">新しい画面の高さ</param>
+        /// <param name="width">画面の幅</param>
+        /// <param name="height">画面の高さ</param>
         void OnScreenResize(int width, int height);
 
         /// <summary>
