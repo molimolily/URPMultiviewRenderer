@@ -14,7 +14,7 @@ namespace MVR
         Camera cam;
 
         // NOTE: ïœçXÇEditorÇ…ë¶éûîΩâfÇ≥ÇπÇÈÇΩÇﬂÇ…ÇÕSerializeÇµÇ»Ç¢
-        [NonSerialized] Vector2Int _viewCount = new Vector2Int(2, 2);
+        [NonSerialized] Vector2Int _viewCount = new Vector2Int(20, 20);
 
         List<PerViewData> perViewData = new List<PerViewData>();
         GraphicsBuffer perViewDataBuffer;
@@ -71,8 +71,9 @@ namespace MVR
         public void SetViewData(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             // bufferÇÃê∂ê¨
-            if (perViewDataBuffer == null)
+            if (perViewDataBuffer == null || perViewDataBuffer.count != TotalViewCount)
             {
+                perViewDataBuffer?.Release();
                 perViewDataBuffer = new GraphicsBuffer(GraphicsBuffer.Target.Structured, TotalViewCount, PerViewData.Size);
             }
 
@@ -81,11 +82,8 @@ namespace MVR
 
             // bufferÇÃëóêM
             CommandBuffer cmd = CommandBufferPool.Get();
-            using (new ProfilingScope(cmd, new ProfilingSampler("Set PerViewData")))
-            {
-                cmd.SetGlobalBuffer(perViewDataID, perViewDataBuffer);
-                context.ExecuteCommandBuffer(cmd);
-            }
+            cmd.SetGlobalBuffer(perViewDataID, perViewDataBuffer);
+            context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
 
@@ -115,9 +113,13 @@ namespace MVR
                 for (int x = 0; x < ViewCount.x; x++)
                 {
                     int index = x + y * ViewCount.x;
+                    Vector3 pos = cam.transform.position;
+                    cam.transform.position = new Vector3(pos.x + (x - (ViewCount.x - 1) / 2.0f) * 0.1f, pos.y - (y - (ViewCount.y - 1) / 2.0f) * 0.1f, pos.z);
+                    float4x4 viewMatrix = cam.worldToCameraMatrix;
+                    cam.transform.position = pos;
                     perViewData[index] = new PerViewData
                     {
-                        viewMatrix = cam.worldToCameraMatrix,
+                        viewMatrix = viewMatrix,
                         projectionMatrix = GL.GetGPUProjectionMatrix(cam.projectionMatrix, true)
                     };
                 }
@@ -140,12 +142,25 @@ namespace MVR
             UpdatePerViewData();
         }
 
+        void OnDisable()
+        {
+            Dispose();
+        }
+
+        void OnDestroy()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Debug.Log("Multiview Camera Payload Dispose");
             _colorTarget?.Release();
+            _colorTarget = null;
             _depthTarget?.Release();
+            _depthTarget = null;
             perViewDataBuffer?.Release();
+            perViewDataBuffer = null;
         }
     }
 }

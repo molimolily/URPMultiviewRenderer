@@ -21,8 +21,6 @@ namespace MVR
 
         ForwardLights forwardLights;
 
-        public static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
-
         static readonly int viewMatricesID = Shader.PropertyToID("_Multiview_ViewMatrices");
         static readonly int projectionMatricesID = Shader.PropertyToID("_Multiview_ProjectionMatrices");
 
@@ -81,21 +79,21 @@ namespace MVR
             // レンダーターゲットの生成
             if (payload.ColorTarget == null || payload.DepthTarget == null)
             {
-                Debug.Log("Generate Render Target");
+                // Debug.Log("Generate Render Target");
                 payload.GenerateRenderTarget(resolution.x, resolution.y);
             }
 
             // 視点数とスライス数が異なる場合はレンダーターゲットを再確保
             if (payload.ColorTarget.rt.volumeDepth != payload.ViewCount.x * payload.ViewCount.y)
             {
-                Debug.Log("Reallocate Render Target");
+                // Debug.Log("Reallocate Render Target");
                 payload.GenerateRenderTarget(resolution.x, resolution.y);
             }
 
             // スクリーンリサイズ時の処理
             if (currentResolution.x != resolution.x || currentResolution.y != resolution.y)
             {
-                Debug.Log("Screen Resize");
+                // Debug.Log("Screen Resize");
                 currentResolution = resolution;
                 payload.OnScreenResize(resolution.x, resolution.y);
             }
@@ -115,16 +113,6 @@ namespace MVR
             // passの追加
             EnqueuePass(multiviewRenderPass);
             EnqueuePass(mergeRTArrayPass);
-
-            CommandBuffer cmd = CommandBufferPool.Get("Setup");
-            cmd.EnableKeyword(multiview_Keyword);
-            context.ExecuteCommandBuffer(cmd);
-            CommandBufferPool.Release(cmd);
-        }
-
-        public override void FinishRendering(CommandBuffer cmd)
-        {
-            cmd.DisableKeyword(multiview_Keyword);
         }
 
         public override void SetupLights(ScriptableRenderContext context, ref RenderingData renderingData)

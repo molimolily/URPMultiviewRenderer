@@ -7,6 +7,8 @@ namespace MVR
 
     public class MultiviewRenderPass : ScriptableRenderPass
     {
+        public static readonly GlobalKeyword multiview_Keyword = GlobalKeyword.Create("MULTIVIEW_PASS");
+
         public Vector2Int viewCount;
 
         RTHandle colorRtArray;
@@ -22,13 +24,9 @@ namespace MVR
             // レンダーターゲットの設定
             ConfigureTarget(colorRtArray, depthRtArray);
 
-            // shader keywordの設定
-            // cmd.EnableKeyword(multiview_Keyword);
-            // cmd.DisableKeyword(multiview_Keyword);
-
             cmd.SetGlobalInt("_ViewCountX", viewCount.x);
             cmd.SetGlobalInt("_ViewCountY", viewCount.y);
-
+            
             // 視点数だけインスタンス数を乗算
             cmd.SetInstanceMultiplier((uint)(viewCount.x * viewCount.y));
         }
@@ -41,15 +39,17 @@ namespace MVR
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get("Clear");
+            CommandBuffer cmd = CommandBufferPool.Get("MultiviewPass");
 
             Camera camera = renderingData.cameraData.camera;
 
             // レンダーターゲットのクリア
             ClearRenderTarget(cmd, camera);
 
-            context.ExecuteCommandBuffer(cmd);
+            // keywordの有効化
+            cmd.SetKeyword(multiview_Keyword, true);
 
+            context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
 
             Render(context, ref renderingData);
@@ -93,12 +93,12 @@ namespace MVR
 
         public override void OnFinishCameraStackRendering(CommandBuffer cmd)
         {
-            // cmd.DisableKeyword(multiview_Keyword);
+            // keywordの無効化
+            cmd.SetKeyword(multiview_Keyword, false);
         }
 
         public override void FrameCleanup(CommandBuffer cmd)
         {
-            // cmd.DisableKeyword(multiview_Keyword);
             cmd.SetInstanceMultiplier(1);
         }
     }
