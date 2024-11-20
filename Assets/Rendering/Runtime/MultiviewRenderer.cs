@@ -21,9 +21,6 @@ namespace MVR
 
         ForwardLights forwardLights;
 
-        static readonly int viewMatricesID = Shader.PropertyToID("_Multiview_ViewMatrices");
-        static readonly int projectionMatricesID = Shader.PropertyToID("_Multiview_ProjectionMatrices");
-
         public MultiviewRenderer(Shader mergeShader, ScriptableRendererData data) : base(data)
         {
             rendererData = data as MultiviewRendererData;
@@ -76,26 +73,20 @@ namespace MVR
             }
 #endif
 
-            // レンダーターゲットの生成
-            if (handler.ColorTarget == null || handler.DepthTarget == null)
-            {
-                // Debug.Log("Generate Render Target");
-                handler.GenerateRenderTarget(resolution.x, resolution.y);
-            }
-
-            // 視点数とスライス数が異なる場合はレンダーターゲットを再確保
-            if (handler.ColorTarget.rt.volumeDepth != handler.ViewCount.x * handler.ViewCount.y)
-            {
-                // Debug.Log("Reallocate Render Target");
-                handler.GenerateRenderTarget(resolution.x, resolution.y);
-            }
-
             // スクリーンリサイズ時の処理
+            // NOTE: 固定解像度のときは初期化時のみ, aspect比で解像度を指定している場合にリサイズ処理が発生し得る
             if (currentResolution.x != resolution.x || currentResolution.y != resolution.y)
             {
                 // Debug.Log("Screen Resize");
                 currentResolution = resolution;
                 handler.OnScreenResize(resolution.x, resolution.y);
+            }
+
+            // レンダーターゲットのnullチェック
+            if (handler.ColorTarget == null || handler.DepthTarget == null)
+            {
+                // Debug.Log("Generate Render Target");
+                handler.GenerateRenderTarget(resolution.x, resolution.y);
             }
 
             // レンダーターゲットの設定
@@ -126,7 +117,7 @@ namespace MVR
         public override void SetupCullingParameters(ref ScriptableCullingParameters cullingParameters, ref CameraData cameraData)
         {
             cullingParameters.maximumVisibleLights = UniversalRenderPipeline.maxVisibleAdditionalLights + 1;
-            cullingParameters.shadowDistance = cameraData.maxShadowDistance;
+            // cullingParameters.shadowDistance = cameraData.maxShadowDistance;
         }
 
         protected override void Dispose(bool disposing)
