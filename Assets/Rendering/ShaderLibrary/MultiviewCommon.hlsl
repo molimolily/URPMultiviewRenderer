@@ -21,6 +21,12 @@
 #endif
 
 #if defined(MULTIVIEW_PASS)
+    #define MULTIVIEW_VIEWID(v) v.instanceID
+#else
+    #define MULTIVIEW_VIEWID(v) 0
+#endif
+
+#if defined(MULTIVIEW_PASS)
 struct PerViewData
 {
     float4x4 viewMatrix;

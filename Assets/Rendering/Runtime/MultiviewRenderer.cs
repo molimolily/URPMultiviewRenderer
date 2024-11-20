@@ -110,6 +110,9 @@ namespace MVR
             // レンダーテクスチャの設定
             mergeRTArrayPass.SetInput(payload.ColorTarget);
 
+            // merge materialのセットアップ
+            payload.SetupMergeMaterial(mergeMaterial);
+
             // passの追加
             EnqueuePass(multiviewRenderPass);
             EnqueuePass(mergeRTArrayPass);

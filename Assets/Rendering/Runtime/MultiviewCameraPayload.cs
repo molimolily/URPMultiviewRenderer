@@ -9,7 +9,7 @@ using Unity.Mathematics;
 namespace MVR
 {
     [RequireComponent(typeof(Camera)), ExecuteAlways]
-    public class MultiviewCameraPayload : MonoBehaviour, ICameraPayload, IDisposable
+    public class MultiviewCameraPayload : MonoBehaviour, ICameraPayload
     {
         Camera cam;
 
@@ -87,6 +87,14 @@ namespace MVR
             CommandBufferPool.Release(cmd);
         }
 
+        public void SetupMergeMaterial(Material material)
+        {
+            if(material == null) return;
+            if(_colorTarget == null) return;
+
+            material.SetTexture("_ColorRTArray", _colorTarget);
+        }
+
         void UpdatePerViewData()
         {
             // PerViewData‚ÌŠ„“–
@@ -144,17 +152,16 @@ namespace MVR
 
         void OnDisable()
         {
-            Dispose();
+            ReleaseResource();
         }
 
         void OnDestroy()
         {
-            Dispose();
+            ReleaseResource();
         }
 
-        public void Dispose()
+        public void ReleaseResource()
         {
-            Debug.Log("Multiview Camera Payload Dispose");
             _colorTarget?.Release();
             _colorTarget = null;
             _depthTarget?.Release();

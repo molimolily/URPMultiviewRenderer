@@ -35,7 +35,7 @@ namespace MVR
             // TextureArray‚Ìƒ^ƒCƒŠƒ“ƒO
             if (mergeMaterial != null && colorRTArray != null)
             {
-                mergeMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
+                // mergeMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
                 CoreUtils.DrawFullScreen(cmd, mergeMaterial);
             }
 

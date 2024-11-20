@@ -44,5 +44,10 @@ namespace MVR
         /// 視点ごとのデータを設定する
         /// </summary>
         void SetViewData(ScriptableRenderContext context, ref RenderingData renderingData);
+
+        /// <summary>
+        /// merge materialの設定
+        /// </summary>
+        void SetupMergeMaterial(Material material);
     }
 }

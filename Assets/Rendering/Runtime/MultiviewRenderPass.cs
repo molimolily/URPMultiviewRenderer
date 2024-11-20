@@ -39,15 +39,17 @@ namespace MVR
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
-            CommandBuffer cmd = CommandBufferPool.Get("MultiviewPass");
-
+            CommandBuffer cmd = CommandBufferPool.Get();
             Camera camera = renderingData.cameraData.camera;
 
-            // レンダーターゲットのクリア
-            ClearRenderTarget(cmd, camera);
+            using (new ProfilingScope(cmd, new ProfilingSampler("MultiviewPass-Setup")))
+            {
+                // レンダーターゲットのクリア
+                ClearRenderTarget(cmd, camera);
 
-            // keywordの有効化
-            cmd.SetKeyword(multiview_Keyword, true);
+                // keywordの有効化
+                cmd.SetKeyword(multiview_Keyword, true);
+            }
 
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
