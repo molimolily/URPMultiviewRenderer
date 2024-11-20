@@ -28,7 +28,7 @@ SubShader {
         #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"
 
         #pragma multi_compile_local _SUNDISK_NONE _SUNDISK_SIMPLE _SUNDISK_HIGH_QUALITY
-        #pragma multi_compile MULTIVIEW_PASS
+        #pragma multi_compile _ MULTIVIEW_PASS
 
         uniform half _Exposure;     // HDR exposure
         uniform half3 _GroundColor;

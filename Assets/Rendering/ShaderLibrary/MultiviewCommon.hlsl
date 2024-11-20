@@ -31,16 +31,23 @@ StructuredBuffer<PerViewData> _PerViewData;
 #endif
 
 #if defined(MULTIVIEW_PASS)
-    #define MULTIVIEW_MATRIX_V(_viewIndex) _PerViewData[_viewIndex].viewMatrix
-    #define MULTIVIEW_MATRIX_P(_viewIndex) _PerViewData[_viewIndex].projectionMatrix
-    #define MULTIVIEW_MATRIX_VP(_viewIndex) mul(_PerViewData[_viewIndex].projectionMatrix, _PerViewData[_viewIndex].viewMatrix)
-    #define MULTIVIEW_MATRIX_MVP(_viewIndex) mul(MULTIVIEW_MATRIX_VP(_viewIndex), unity_ObjectToWorld) 
-    // #define MULTIVIEW_MATRIX_MVP(_viewIndex) mul(unity_MatrixVP, unity_ObjectToWorld)
+    #define MULTIVIEW_MATRIX_V(v) _PerViewData[v.instanceID].viewMatrix
+    #define MULTIVIEW_MATRIX_P(v) _PerViewData[v.instanceID].projectionMatrix
+    #define MULTIVIEW_MATRIX_VP(v) mul(_PerViewData[v.instanceID].projectionMatrix, _PerViewData[v.instanceID].viewMatrix)
+    #define MULTIVIEW_MATRIX_MVP(v) mul(MULTIVIEW_MATRIX_VP(v), unity_ObjectToWorld)
+    #define MULTIVIEW_MATRIX_V_ANY(_viewIndex) _PerViewData[_viewIndex].viewMatrix
+    #define MULTIVIEW_MATRIX_P_ANY(_viewIndex) _PerViewData[_viewIndex].projectionMatrix
+    #define MULTIVIEW_MATRIX_VP_ANY(_viewIndex) mul(_PerViewData[_viewIndex].projectionMatrix, _PerViewData[_viewIndex].viewMatrix)
+    #define MULTIVIEW_MATRIX_MVP_ANY(_viewIndex) mul(MULTIVIEW_MATRIX_VP(_viewIndex), unity_ObjectToWorld) 
 #else
-    #define MULTIVIEW_MATRIX_V(_viewIndex) unity_MatrixV
-    #define MULTIVIEW_MATRIX_P(_viewIndex) OptimizeProjectionMatrix(glstate_matrix_projection)
-    #define MULTIVIEW_MATRIX_VP(_viewIndex) unity_MatrixVP
-    #define MULTIVIEW_MATRIX_MVP(_viewIndex) mul(unity_MatrixVP, unity_ObjectToWorld)
+    #define MULTIVIEW_MATRIX_V(v) unity_MatrixV
+    #define MULTIVIEW_MATRIX_P(v) OptimizeProjectionMatrix(glstate_matrix_projection)
+    #define MULTIVIEW_MATRIX_VP(v) unity_MatrixVP
+    #define MULTIVIEW_MATRIX_MVP(v) mul(unity_MatrixVP, unity_ObjectToWorld)
+    #define MULTIVIEW_MATRIX_V_ANY(_viewIndex) MULTIVIEW_MATRIX_V(_viewIndex)
+    #define MULTIVIEW_MATRIX_P_ANY(_viewIndex) MULTIVIEW_MATRIX_P(_viewIndex)
+    #define MULTIVIEW_MATRIX_VP_ANY(_viewIndex) MULTIVIEW_MATRIX_VP(_viewIndex)
+    #define MULTIVIEW_MATRIX_MVP_ANY(_viewIndex) MULTIVIEW_MATRIX_MVP(_viewIndex)
 #endif
 
 #endif // MULTIVIEW_COMMON_INCLUDED

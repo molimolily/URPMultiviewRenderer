@@ -195,7 +195,7 @@ Varyings LitPassVertex(Attributes input)
 #endif
 
     // output.positionCS = vertexInput.positionCS;
-    output.positionCS = mul(MULTIVIEW_MATRIX_MVP(0), input.positionOS);
+    output.positionCS = mul(MULTIVIEW_MATRIX_MVP(input), input.positionOS);
 
     return output;
 }

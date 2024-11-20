@@ -17,7 +17,7 @@ Shader "Multiview/Debug/Unlit"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile MULTIVIEW_PASS
+            #pragma multi_compile _ MULTIVIEW_PASS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Assets/Rendering/ShaderLibrary/MultiviewCommon.hlsl"

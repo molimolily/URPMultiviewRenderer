@@ -133,7 +133,7 @@ Shader "Multiview/Simple Lit"
 
             //--------------------------------------
             // Multiview
-            #pragma multi_compile MULTIVIEW_PASS
+            #pragma multi_compile _ MULTIVIEW_PASS
 
             // -------------------------------------
             // Includes
