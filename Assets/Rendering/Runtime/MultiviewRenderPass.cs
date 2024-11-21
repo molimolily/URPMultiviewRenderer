@@ -23,9 +23,6 @@ namespace MVR
         {
             // レンダーターゲットの設定
             ConfigureTarget(colorRtArray, depthRtArray);
-
-            cmd.SetGlobalInt("_ViewCountX", viewCount.x);
-            cmd.SetGlobalInt("_ViewCountY", viewCount.y);
             
             // 視点数だけインスタンス数を乗算
             cmd.SetInstanceMultiplier((uint)(viewCount.x * viewCount.y));

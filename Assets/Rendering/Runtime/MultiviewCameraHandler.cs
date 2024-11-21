@@ -14,7 +14,7 @@ namespace MVR
         Camera cam;
 
         // NOTE: ïœçXÇEditorÇ…ë¶éûîΩâfÇ≥ÇπÇÈÇΩÇﬂÇ…ÇÕSerializeÇµÇ»Ç¢
-        [NonSerialized] Vector2Int _viewCount = new Vector2Int(1, 1);
+        [NonSerialized] Vector2Int _viewCount = new Vector2Int(40, 20);
 
         List<PerViewData> perViewData = new List<PerViewData>();
         GraphicsBuffer perViewDataBuffer;
@@ -37,6 +37,7 @@ namespace MVR
 
         public int TotalViewCount => ViewCount.x * ViewCount.y;
 
+        public RTHandleProperties RenderTargetHandleProperties => rtHandleSytem.rtHandleProperties;
         public RTHandle ColorTarget { get; private set; }
         public RTHandle DepthTarget { get; private set; }
 
@@ -50,12 +51,6 @@ namespace MVR
             rtHandleSytem.SetReferenceSize(viewWidth, viewHeight);
 
             RTHandleProperties rtHandleProperties = rtHandleSytem.rtHandleProperties;
-            Debug.Log(
-                $"Current RenderTargetSize: {rtHandleProperties.currentRenderTargetSize} \n" +
-                $"Current ViewportSise: {rtHandleProperties.currentViewportSize} \n" +
-                $"RTHandle Scale: {rtHandleProperties.rtHandleScale.ToString("F10")} \n" +
-                $"Previous RenderTargetSize: {rtHandleProperties.previousRenderTargetSize} \n" +
-                $"Previous ViewportSize: {rtHandleProperties.previousViewportSize}");
 
             if (ColorTarget == null || DepthTarget == null || 
                 ColorTarget.rt.volumeDepth != TotalViewCount || DepthTarget.rt.volumeDepth != TotalViewCount)
@@ -72,7 +67,8 @@ namespace MVR
                         colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
                         filterMode: FilterMode.Bilinear,
                         wrapMode: TextureWrapMode.Clamp,
-                        dimension: TextureDimension.Tex2DArray
+                        dimension: TextureDimension.Tex2DArray,
+                        name: "ColorTargetArray"
                 );
 
                 DepthTarget = rtHandleSytem.Alloc(
@@ -82,7 +78,8 @@ namespace MVR
                     colorFormat: GraphicsFormat.R32_SFloat,
                     filterMode: FilterMode.Point,
                     wrapMode: TextureWrapMode.Clamp,
-                    dimension: TextureDimension.Tex2DArray
+                    dimension: TextureDimension.Tex2DArray,
+                    name: "DepthTargetArray"
                     );
             }
 

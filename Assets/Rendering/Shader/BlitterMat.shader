@@ -1,4 +1,4 @@
-Shader "Hidden/BlitterMat"
+Shader "Blit/BlitterMat"
 {
     SubShader
     {

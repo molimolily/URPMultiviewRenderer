@@ -95,11 +95,19 @@ namespace MVR
             // 視点数の設定
             multiviewRenderPass.viewCount = handler.ViewCount;
 
+
+            // Global変数の設定
+            CommandBuffer cmd = CommandBufferPool.Get("Setup");
+            cmd.SetGlobalInt("_ViewCountX", handler.ViewCount.x);
+            cmd.SetGlobalInt("_ViewCountY", handler.ViewCount.y);
+            context.ExecuteCommandBuffer(cmd);
+            CommandBufferPool.Release(cmd);
+
             // ビューデータの設定
             handler.SetViewData(context, ref renderingData);
 
             // レンダーテクスチャの設定
-            mergeRTArrayPass.SetInput(handler.ColorTarget);
+            mergeRTArrayPass.SetInput(handler.ColorTarget, handler.RenderTargetHandleProperties);
 
             // merge materialのセットアップ
             handler.SetupMergeMaterial(mergeMaterial);

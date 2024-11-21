@@ -16,6 +16,11 @@ namespace MVR
         /// </summary>
         Vector2Int ViewCount { get; }
 
+        // <summary>
+        /// レンダーターゲットハンドルのプロパティ
+        /// </summary>
+        RTHandleProperties RenderTargetHandleProperties { get; }
+
         /// <summary>
         /// カラーレンダーターゲット
         /// </summary>
