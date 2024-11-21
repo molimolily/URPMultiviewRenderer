@@ -18,6 +18,7 @@
     #define MULTIVIEW_ASSIGN_RTINDEX_ANY(o, value) o.rtIndex = value;
 #else
     #define MULTIVIEW_ASSIGN_RTINDEX(o, v)
+    #define MULTIVIEW_ASSIGN_RTINDEX_ANY(o, value)
 #endif
 
 #if defined(MULTIVIEW_PASS)

@@ -16,6 +16,11 @@ namespace MVR
         /// </summary>
         Vector2Int ViewCount { get; }
 
+        // <summary>
+        /// レンダーターゲットハンドルのプロパティ
+        /// </summary>
+        RTHandleProperties RenderTargetHandleProperties { get; }
+
         /// <summary>
         /// カラーレンダーターゲット
         /// </summary>
@@ -28,6 +33,7 @@ namespace MVR
 
         /// <summary>
         /// 画面リサイズ時の処理を行う
+        /// Game Viewの解像度をaspect比で指定している場合はリサイズが発生し得る
         /// </summary>
         /// <param name="width">画面の幅</param>
         /// <param name="height">画面の高さ</param>
