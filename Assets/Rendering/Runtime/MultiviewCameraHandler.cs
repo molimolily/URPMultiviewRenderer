@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using Unity.Mathematics;
 
 namespace MVR
 {
@@ -14,7 +13,7 @@ namespace MVR
         Camera cam;
 
         // NOTE: ïœçXÇEditorÇ…ë¶éûîΩâfÇ≥ÇπÇÈÇΩÇﬂÇ…ÇÕSerializeÇµÇ»Ç¢
-        [NonSerialized] Vector2Int _viewCount = new Vector2Int(40, 20);
+        [NonSerialized] Vector2Int _viewCount = new Vector2Int(2, 2);
 
         List<PerViewData> perViewData = new List<PerViewData>();
         GraphicsBuffer perViewDataBuffer;
@@ -133,8 +132,8 @@ namespace MVR
                 {
                     perViewData.Add(new PerViewData
                     {
-                        viewMatrix = float4x4.identity,
-                        projectionMatrix = float4x4.identity
+                        viewMatrix = Matrix4x4.identity,
+                        projectionMatrix = Matrix4x4.identity
                     });
                 }
             }
@@ -147,7 +146,7 @@ namespace MVR
                     int index = x + y * ViewCount.x;
                     Vector3 pos = cam.transform.position;
                     cam.transform.position = new Vector3(pos.x + (x - (ViewCount.x - 1) / 2.0f) * 0.1f, pos.y - (y - (ViewCount.y - 1) / 2.0f) * 0.1f, pos.z);
-                    float4x4 viewMatrix = cam.worldToCameraMatrix;
+                    Matrix4x4 viewMatrix = cam.worldToCameraMatrix;
                     cam.transform.position = pos;
                     perViewData[index] = new PerViewData
                     {

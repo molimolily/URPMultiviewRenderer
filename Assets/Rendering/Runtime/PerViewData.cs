@@ -7,10 +7,11 @@ namespace MVR
     /// <summary>
     /// 視点ごとのデータ
     /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
     public struct PerViewData
     {
-        public float4x4 viewMatrix;
-        public float4x4 projectionMatrix;
+        public Matrix4x4 viewMatrix;
+        public Matrix4x4 projectionMatrix;
 
         public static int Size => Marshal.SizeOf(typeof(PerViewData));
     }
