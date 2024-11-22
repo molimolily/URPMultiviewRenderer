@@ -24,20 +24,46 @@ public class SingleViewCamera : MonoBehaviour
         }
     }
 
-    public FrustumPlanes Frustum { get; set; } = new FrustumPlanes
-    {
-        left = -0.1f,
-        right = 0.1f,
-        bottom = -0.1f,
-        top = 0.1f,
-        zNear = 0.3f,
-        zFar = 1000
-    };
+    public FrustumPlanes frustum;
 
-    FrustumPlanes previousFrustumPlanes;
-    Vector3 previousPosition = Vector3.zero;
-    Quaternion previousRotation = Quaternion.identity;
-    
+    private float _fov;
+    /// <summary>
+    /// Field of view [deg]
+    /// FrustumPlaneの値を直接設定した場合、この値は適切な視野角を表さない
+    /// </summary>
+    public float FoV
+    {
+        
+        get => _fov;
+        set
+        {
+            frustum.top = Mathf.Tan(value * Mathf.Deg2Rad / 2) * frustum.zNear;
+            frustum.bottom = -frustum.top;
+            frustum.right = frustum.top * _aspect;
+            frustum.left = -frustum.right;
+            _fov = value;
+        }
+    }
+
+    private float _aspect;
+    /// <summary>
+    /// アスペクト比
+    /// FrustumPlaneの値を直接設定した場合、この値は適切なアスペクト比を表さない
+    /// </summary>
+    public float Aspect
+    {
+        get => _aspect;
+        set
+        {
+            frustum.right = frustum.top * value;
+            frustum.left = -frustum.right;
+            _aspect = value;
+        }
+    }
+
+    protected FrustumPlanes previousFrustumPlanes;
+    protected Vector3 previousPosition = Vector3.zero;
+    protected Quaternion previousRotation = Quaternion.identity;
 
     bool HasTransformChanged()
     {
@@ -52,9 +78,9 @@ public class SingleViewCamera : MonoBehaviour
 
     bool HasProjectionChanged()
     {
-        var currentFrustum = Frustum;
+        var currentFrustum = frustum;
         bool dirty = previousFrustumPlanes.left != currentFrustum.left ||
-            previousFrustumPlanes.right != Frustum.right ||
+            previousFrustumPlanes.right != currentFrustum.right ||
             previousFrustumPlanes.bottom != currentFrustum.bottom ||
             previousFrustumPlanes.top != currentFrustum.top ||
             previousFrustumPlanes.zNear != currentFrustum.zNear ||
@@ -76,13 +102,14 @@ public class SingleViewCamera : MonoBehaviour
     protected virtual void UpdateProjectionMatrix()
     {
         if (HasProjectionChanged())
-            _projectionMatrix = Matrix4x4.Frustum(Frustum);
+            _projectionMatrix = Matrix4x4.Frustum(frustum);
     }
 
     #region EditorOnly
 #if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    protected void OnDrawGizmosSelected()
     {
+        Gizmos.color = new Color(1.0f, 1.0f, 1.0f, 0.5f);
         DrawGizmoFrustum();
     }
 
@@ -90,7 +117,7 @@ public class SingleViewCamera : MonoBehaviour
     Vector3[] fl = new Vector3[24];
     void DrawGizmoFrustum()
     {
-        var f = Frustum;
+        var f = frustum;
         // Near plane
         fc[0] = new Vector3(f.left, f.bottom, f.zNear);
         fc[1] = new Vector3(f.right, f.bottom, f.zNear);
