@@ -40,14 +40,24 @@ namespace MVR
         public RTHandle ColorTarget { get; private set; }
         public RTHandle DepthTarget { get; private set; }
 
+        /// <summary>
+        /// 視点解像度の計算
+        /// </summary>
+        /// <param name="width">画面の幅</param>
+        /// <param name="height">画面の高さ</param>
+        /// <returns>視点解像度</returns>
+        protected virtual Vector2Int ComputeViewResolution(int width, int height)
+        {
+            return new Vector2Int(width / ViewCount.x, height / ViewCount.y);
+        }
+
         void AllocateRenderTarget(int width, int height)
         {
             // 各視点の解像度
-            int viewWidth = Mathf.CeilToInt(width / ViewCount.x);
-            int viewHeight = Mathf.CeilToInt(height / ViewCount.y);
+            Vector2Int viewResolution = ComputeViewResolution(width, height);
 
             // ReferenceSizeの設定
-            rtHandleSytem.SetReferenceSize(viewWidth, viewHeight);
+            rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y);
 
             RTHandleProperties rtHandleProperties = rtHandleSytem.rtHandleProperties;
 
@@ -94,7 +104,12 @@ namespace MVR
             AllocateRenderTarget(width, height);
         }
 
-        public void SetViewData(ScriptableRenderContext context, ref RenderingData renderingData)
+        /// <summary>
+        /// 各視点のビューデータをGPUに送信する
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="renderingData"></param>
+        public virtual void SetViewData(ScriptableRenderContext context, ref RenderingData renderingData)
         {
             // bufferの生成
             if (perViewDataBuffer == null || perViewDataBuffer.count != TotalViewCount)
@@ -113,12 +128,18 @@ namespace MVR
             CommandBufferPool.Release(cmd);
         }
 
-        public void SetupMergeMaterial(Material material)
+        /// <summary>
+        /// MergeMaterialの設定
+        /// </summary>
+        public virtual void SetupMergeMaterial(Material material)
         {
             
         }
 
-        void UpdatePerViewData()
+        /// <summary>
+        /// 各視点のビューデータを更新する
+        /// </summary>
+        protected virtual void UpdatePerViewData()
         {
             // PerViewDataの割当
             if (perViewData.Count != TotalViewCount)

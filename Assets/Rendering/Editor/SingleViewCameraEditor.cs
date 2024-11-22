@@ -22,14 +22,32 @@ public class SingleViewCameraEditor : Editor
     private readonly GUIContent topContent = new GUIContent("Top", "Top value of frustum");
     private readonly GUIContent bottomContent = new GUIContent("Bottom", "Bottom value of frustum");
 
+    private void OnEnable()
+    {
+        camera = target as SingleViewCamera;
+        if (camera == null) return;
+        projectionMode = ProjectionMode.Perspective;
+
+        camera.frustum.zNear = 0.3f;
+        camera.frustum.zFar = 1000.0f;
+        camera.FoV = 60.0f;
+        camera.Aspect = 16.0f / 9.0f;
+    }
     public override void OnInspectorGUI()
     {
         camera = target as SingleViewCamera;
         if (camera == null) return;
 
-        projectionMode = (ProjectionMode)EditorGUILayout.EnumPopup("Projection Mode", projectionMode);
+        EditorGUI.BeginChangeCheck();
+        var pMode = (ProjectionMode)EditorGUILayout.EnumPopup("Projection Mode", projectionMode);
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(camera, "Change Projection Mode");
+            projectionMode = pMode;
+            EditorUtility.SetDirty(camera);
+        }
 
-        switch(projectionMode)
+        switch (projectionMode)
         {
             case ProjectionMode.Perspective:
                 DrawPerspectiveSettings();
