@@ -64,6 +64,12 @@ namespace MVR
                 return;
             }
 
+            // レンダリングの有無
+            if (!handler.ShouldRender)
+            {
+                return;
+            }
+
 #if UNITY_EDITOR
             // スライス数と視点数のチェック
             if (handler.ViewCount.x * handler.ViewCount.y > SystemInfo.maxTextureArraySlices)

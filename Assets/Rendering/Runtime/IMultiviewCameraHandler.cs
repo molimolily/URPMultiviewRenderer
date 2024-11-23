@@ -11,6 +11,8 @@ namespace MVR
     /// </summary>
     public interface IMultiviewCameraHandler
     {
+        bool ShouldRender { get;}
+
         /// <summary>
         /// ‹“_”
         /// </summary>

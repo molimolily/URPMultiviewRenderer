@@ -78,7 +78,7 @@ public class SingleViewCameraEditor : Editor
             }
 
             EditorGUI.BeginChangeCheck();
-            var far = EditorGUILayout.FloatField("Far", camera.frustum.zFar);
+            var far = EditorGUILayout.FloatField(farContent, camera.frustum.zFar);
             if (EditorGUI.EndChangeCheck())
             {
                 if(far > near)
@@ -90,7 +90,7 @@ public class SingleViewCameraEditor : Editor
             }
 
             EditorGUI.BeginChangeCheck();
-            var fov = EditorGUILayout.Slider("Field of View", camera.FoV, 0.1f, 179.0f);
+            var fov = EditorGUILayout.Slider(fovContent, camera.FoV, 0.1f, 179.0f);
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RecordObject(camera, "Change Field of View");
@@ -99,7 +99,7 @@ public class SingleViewCameraEditor : Editor
             }
 
             EditorGUI.BeginChangeCheck();
-            var aspect = EditorGUILayout.FloatField("Aspect", camera.Aspect);
+            var aspect = EditorGUILayout.FloatField(aspectContent, camera.Aspect);
             if (EditorGUI.EndChangeCheck())
             {
                 if (aspect > 0)

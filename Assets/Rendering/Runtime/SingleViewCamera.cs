@@ -26,6 +26,33 @@ public class SingleViewCamera : MonoBehaviour
 
     public FrustumPlanes frustum;
 
+    /// <summary>
+    /// Near cliping plane
+    /// access to FrustumPlane.zNear
+    /// </summary>
+    public float Near
+    {
+        get => frustum.zNear;
+        set
+        {
+            frustum.zNear = value;
+            FoV = _fov;
+        }
+    }
+
+    /// <summary>
+    /// Far cliping plane
+    /// access to FrustumPlane.zFar
+    /// </summary>
+    public float Far
+    {
+        get => frustum.zFar;
+        set
+        {
+            frustum.zFar = value;
+        }
+    }
+
     private float _fov;
     /// <summary>
     /// Field of view [deg]

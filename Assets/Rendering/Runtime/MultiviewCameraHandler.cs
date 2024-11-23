@@ -12,15 +12,18 @@ namespace MVR
     {
         Camera cam;
 
-        // NOTE: 変更をEditorに即時反映させるためにはSerializeしない
-        [NonSerialized] Vector2Int _viewCount = new Vector2Int(2, 2);
-
+        List<SingleViewCamera> cameras = new List<SingleViewCamera>();
         List<PerViewData> perViewData = new List<PerViewData>();
         GraphicsBuffer perViewDataBuffer;
         static readonly int perViewDataID = Shader.PropertyToID("_PerViewData");
 
         RTHandleSystem rtHandleSytem;
 
+        public BaseMultiviewCamera multiviewCamera;
+
+        public bool ShouldRender { get; set; } = false;
+
+        [SerializeField, HideInInspector] Vector2Int _viewCount = Vector2Int.one;
         public Vector2Int ViewCount
         {
             get => _viewCount;
@@ -40,29 +43,34 @@ namespace MVR
         public RTHandle ColorTarget { get; private set; }
         public RTHandle DepthTarget { get; private set; }
 
-        /// <summary>
-        /// 視点解像度の計算
-        /// </summary>
-        /// <param name="width">画面の幅</param>
-        /// <param name="height">画面の高さ</param>
-        /// <returns>視点解像度</returns>
-        protected virtual Vector2Int ComputeViewResolution(int width, int height)
-        {
-            return new Vector2Int(width / ViewCount.x, height / ViewCount.y);
-        }
-
         void AllocateRenderTarget(int width, int height)
         {
+            bool hasRenderTargets = ColorTarget != null && DepthTarget != null;
+            bool isViewCountChanged = hasRenderTargets ? ColorTarget.rt.volumeDepth != TotalViewCount || DepthTarget.rt.volumeDepth != TotalViewCount : false;
+            if (isViewCountChanged)
+            {
+                InitializeRTHandleSystem();
+                Debug.Log("ViewCount Changed");
+            }
+
             // 各視点の解像度
-            Vector2Int viewResolution = ComputeViewResolution(width, height);
+            Vector2Int viewResolution = multiviewCamera.ComputeViewResolution(ViewCount, width, height);
 
             // ReferenceSizeの設定
-            rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y);
+            // rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y, isViewCountChanged);
+            if(isViewCountChanged)
+            {
+                rtHandleSytem.ResetReferenceSize(viewResolution.x, viewResolution.y);
+            }
+            else
+            {
+                rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y);
+            }
 
+            // RTHandlePropertiesの取得
             RTHandleProperties rtHandleProperties = rtHandleSytem.rtHandleProperties;
 
-            if (ColorTarget == null || DepthTarget == null || 
-                ColorTarget.rt.volumeDepth != TotalViewCount || DepthTarget.rt.volumeDepth != TotalViewCount)
+            if (!hasRenderTargets || isViewCountChanged)
             {
                 // レンダーターゲットの解放
                 ColorTarget?.Release();
@@ -178,16 +186,28 @@ namespace MVR
             }
         }
 
-        void Init()
+        void InitializeRTHandleSystem()
         {
+            rtHandleSytem?.Dispose();
+            rtHandleSytem = new RTHandleSystem();
+
+            Vector2Int viewResolution = multiviewCamera.InitialViewResolution(ViewCount, cam.pixelWidth, cam.pixelHeight);
+            Debug.Log(viewResolution);
+            rtHandleSytem.Initialize(viewResolution.x, viewResolution.y);
+        }
+
+            void Init()
+        {
+            if(multiviewCamera != null || ViewCount.x < 0 || ViewCount.y < 0)
+                ShouldRender = true;
+            else
+                ShouldRender = false;
+
             // カメラの取得
             cam = GetComponent<Camera>();
 
             // RTHandleSystemの初期化
-            rtHandleSytem = new RTHandleSystem();
-            int width = cam.pixelWidth / ViewCount.x;
-            int height = cam.pixelHeight / ViewCount.y;
-            rtHandleSytem.Initialize(width, height);
+            InitializeRTHandleSystem();
         }
 
         void OnEnable()
@@ -202,6 +222,7 @@ namespace MVR
             {
                 Init();
             }
+            
 #endif
         }
 
@@ -211,17 +232,7 @@ namespace MVR
             UpdatePerViewData();
         }
 
-        void OnDisable()
-        {
-            ReleaseResource();
-        }
-
-        void OnDestroy()
-        {
-            ReleaseResource();
-        }
-
-        public void ReleaseResource()
+        public void ReleaseResources()
         {
             ColorTarget?.Release();
             ColorTarget = null;
@@ -230,6 +241,9 @@ namespace MVR
             perViewDataBuffer?.Release();
             perViewDataBuffer = null;
         }
+
+        protected virtual void OnDisable() => ReleaseResources();
+        protected virtual void OnDestroy() => ReleaseResources();
     }
 }
 
