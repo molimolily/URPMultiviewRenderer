@@ -163,15 +163,9 @@ namespace MVR
                 for (int x = 0; x < ViewCount.x; x++)
                 {
                     int index = x + y * ViewCount.x;
-                    Vector3 pos = cam.transform.position;
-                    cam.transform.position = new Vector3(pos.x + (x - (ViewCount.x - 1) / 2.0f) * 0.1f, pos.y - (y - (ViewCount.y - 1) / 2.0f) * 0.1f, pos.z);
-                    Matrix4x4 viewMatrix = cam.worldToCameraMatrix;
-                    cam.transform.position = pos;
-                    perViewData[index] = new PerViewData
-                    {
-                        viewMatrix = viewMatrix,
-                        projectionMatrix = GL.GetGPUProjectionMatrix(cam.projectionMatrix, true)
-                    };
+                    var tempPerViewData = perViewData[index];
+                    multiviewCamera.SetPerViewData(ViewCount, x, y, out tempPerViewData);
+                    perViewData[index] = tempPerViewData;
                 }
             }
         }
@@ -226,6 +220,8 @@ namespace MVR
 
         void LateUpdate()
         {
+            if(multiviewCamera == null) return;
+
             // PerViewData‚ÌXV
             UpdatePerViewData();
         }

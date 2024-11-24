@@ -12,7 +12,7 @@ namespace MVR
         private int maxTextureArraySlices;
         void OnEnable()
         {
-            // maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 1;
+            maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 1;
             // Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
         }
         public override void OnInspectorGUI()
