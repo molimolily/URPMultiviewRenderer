@@ -11,15 +11,17 @@ namespace MVR
     /// </summary>
     public interface IMultiviewCameraHandler
     {
+        bool ShouldRender { get;}
+
         /// <summary>
         /// 視点数
         /// </summary>
         Vector2Int ViewCount { get; }
 
         // <summary>
-        /// レンダーターゲットハンドルのプロパティ
+        /// レンダーターゲットのスケールファクター
         /// </summary>
-        RTHandleProperties RenderTargetHandleProperties { get; }
+        Vector4 ScaleFactor { get; }
 
         /// <summary>
         /// カラーレンダーターゲット

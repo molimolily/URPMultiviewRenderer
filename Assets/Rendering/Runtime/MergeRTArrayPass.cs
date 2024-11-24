@@ -7,7 +7,7 @@ namespace MVR
     public class MergeRTArrayPass : ScriptableRenderPass
     {
         Material mergeMaterial;
-        RTHandleProperties rtHandleProperties;
+        Vector4 scaleFactor;
         RTHandle colorRTArray;
 
         public MergeRTArrayPass(Material mergeMaterial)
@@ -23,10 +23,10 @@ namespace MVR
             ConfigureClear(ClearFlag.Color, Color.clear);
         }
 
-        public void SetInput(RTHandle colorRTArray, RTHandleProperties rtHandleProperties)
+        public void SetInput(RTHandle colorRTArray, Vector4 scaleFactor)
         {
             this.colorRTArray = colorRTArray;
-            this.rtHandleProperties = rtHandleProperties;
+            this.scaleFactor = scaleFactor;
         }
 
 
@@ -45,9 +45,8 @@ namespace MVR
             if (mergeMaterial != null && colorRTArray != null)
             {
                 mergeMaterial.SetTexture("_ColorRTArray", colorRTArray.rt);
-                mergeMaterial.SetVector("_BlitScaleFactor", rtHandleProperties.rtHandleScale);
+                mergeMaterial.SetVector("_BlitScaleFactor", scaleFactor);
                 CoreUtils.DrawFullScreen(cmd, mergeMaterial);
-                // Blitter.BlitCameraTexture(cmd, colorRTArray, k_CameraTarget, mergeMaterial, 0);
             }
 
             context.ExecuteCommandBuffer(cmd);

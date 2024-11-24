@@ -21,6 +21,7 @@ namespace MVR
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
+
             // レンダーターゲットの設定
             ConfigureTarget(colorRtArray, depthRtArray);
             
@@ -56,10 +57,12 @@ namespace MVR
 
         void ClearRenderTarget(CommandBuffer cmd, Camera camera)
         {
+            float depth = 1.0f; // Depth Bufferのクリア値
             CameraClearFlags clearFlags = camera.clearFlags;
             cmd.ClearRenderTarget(clearFlags <= CameraClearFlags.Depth,
                 clearFlags <= CameraClearFlags.Color,
-                clearFlags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
+                clearFlags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear,
+                depth);
         }
 
         void Render(ScriptableRenderContext context, ref RenderingData renderingData)

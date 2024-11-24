@@ -28,9 +28,6 @@ namespace MVR
             // マルチビューレンダーパス
             multiviewRenderPass = new MultiviewRenderPass();
 
-            // int maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 0;
-            // Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
-
             // マージマテリアルの設定
             if (mergeShader == null)
                 mergeShader = Shader.Find("Merge/TilingRTArray");
@@ -64,6 +61,12 @@ namespace MVR
                 return;
             }
 
+            // レンダリングの有無
+            if (!handler.ShouldRender)
+            {
+                return;
+            }
+
 #if UNITY_EDITOR
             // スライス数と視点数のチェック
             if (handler.ViewCount.x * handler.ViewCount.y > SystemInfo.maxTextureArraySlices)
@@ -77,7 +80,6 @@ namespace MVR
             // NOTE: 固定解像度のときは初期化時のみ, aspect比で解像度を指定している場合にリサイズ処理が発生し得る
             if (currentResolution.x != resolution.x || currentResolution.y != resolution.y)
             {
-                // Debug.Log("Screen Resize");
                 currentResolution = resolution;
                 handler.OnScreenResize(resolution.x, resolution.y);
             }
@@ -85,7 +87,6 @@ namespace MVR
             // レンダーターゲットのnullチェック
             if (handler.ColorTarget == null || handler.DepthTarget == null)
             {
-                // Debug.Log("Generate Render Target");
                 handler.GenerateRenderTarget(resolution.x, resolution.y);
             }
 
@@ -107,7 +108,7 @@ namespace MVR
             handler.SetViewData(context, ref renderingData);
 
             // レンダーテクスチャの設定
-            mergeRTArrayPass.SetInput(handler.ColorTarget, handler.RenderTargetHandleProperties);
+            mergeRTArrayPass.SetInput(handler.ColorTarget, handler.ScaleFactor);
 
             // merge materialのセットアップ
             handler.SetupMergeMaterial(mergeMaterial);
