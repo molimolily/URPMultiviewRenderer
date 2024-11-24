@@ -21,6 +21,7 @@ namespace MVR
 
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
+
             // レンダーターゲットの設定
             ConfigureTarget(colorRtArray, depthRtArray);
             

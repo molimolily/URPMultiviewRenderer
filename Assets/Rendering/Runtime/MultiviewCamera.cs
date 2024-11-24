@@ -6,12 +6,16 @@ public class MultiviewCamera : BaseMultiviewCamera
 {
     public override Vector2Int InitialViewResolution(Vector2Int viewCount, int width, int height)
     {
-        return new Vector2Int(width / viewCount.x, height / viewCount.y);
+        int viewWidth = Mathf.CeilToInt(width / viewCount.x);
+        int viewHeight = Mathf.CeilToInt(height / viewCount.y);
+        return new Vector2Int(viewWidth, viewHeight);
     }
 
     public override Vector2Int ComputeViewResolution(Vector2Int viewCount, int width, int height)
     {
-        return new Vector2Int(width / viewCount.x, height / viewCount.y);
+        int viewWidth = Mathf.CeilToInt(width / viewCount.x);
+        int viewHeight = Mathf.CeilToInt(height / viewCount.y);
+        return new Vector2Int(viewWidth, viewHeight);
     }
 
     public override void SetPerViewData(Vector2Int viewCount, int x, int y, out PerViewData perViewData)

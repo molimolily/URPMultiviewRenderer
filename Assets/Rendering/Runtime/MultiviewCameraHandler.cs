@@ -17,7 +17,8 @@ namespace MVR
         GraphicsBuffer perViewDataBuffer;
         static readonly int perViewDataID = Shader.PropertyToID("_PerViewData");
 
-        RTHandleSystem rtHandleSytem;
+        RTArrayHandleSystem colorRTArrayHandleSysetem;
+        RTArrayHandleSystem depthRTArrayHandleSysetem;
 
         public BaseMultiviewCamera multiviewCamera;
 
@@ -32,16 +33,26 @@ namespace MVR
                 if(ViewCount != value)
                 {
                     _viewCount = value;
-                    AllocateRenderTarget(ColorTarget.rt.width, ColorTarget.rt.height);
+                    AllocateRenderTarget();
                 }
             }
         }
 
         public int TotalViewCount => ViewCount.x * ViewCount.y;
 
-        public RTHandleProperties RenderTargetHandleProperties => rtHandleSytem.rtHandleProperties;
-        public RTHandle ColorTarget { get; private set; }
-        public RTHandle DepthTarget { get; private set; }
+        public Vector4 ScaleFactor => colorRTArrayHandleSysetem.ScaleFactor;
+
+        private RTHandle _colorTarget;
+        public RTHandle ColorTarget => _colorTarget;
+        private RTHandle _depthTarget;
+        public RTHandle DepthTarget => _depthTarget;
+
+        void AllocateRenderTarget()
+        {
+            int width = cam.pixelWidth;
+            int height = cam.pixelHeight;
+            AllocateRenderTarget(width, height);
+        }
 
         void AllocateRenderTarget(int width, int height)
         {
@@ -50,56 +61,35 @@ namespace MVR
             if (isViewCountChanged)
             {
                 InitializeRTHandleSystem();
-                Debug.Log("ViewCount Changed");
             }
 
             // 各視点の解像度
             Vector2Int viewResolution = multiviewCamera.ComputeViewResolution(ViewCount, width, height);
 
-            // ReferenceSizeの設定
-            // rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y, isViewCountChanged);
-            if(isViewCountChanged)
-            {
-                rtHandleSytem.ResetReferenceSize(viewResolution.x, viewResolution.y);
-            }
-            else
-            {
-                rtHandleSytem.SetReferenceSize(viewResolution.x, viewResolution.y);
-            }
-
-            // RTHandlePropertiesの取得
-            RTHandleProperties rtHandleProperties = rtHandleSytem.rtHandleProperties;
-
-            if (!hasRenderTargets || isViewCountChanged)
-            {
-                // レンダーターゲットの解放
-                ColorTarget?.Release();
-                DepthTarget?.Release();
-
-                // レンダーターゲットの生成
-                ColorTarget = rtHandleSytem.Alloc(
-                        scaleFactor: Vector2.one,
-                        slices: TotalViewCount,
-                        depthBufferBits: DepthBits.None,
-                        colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
-                        filterMode: FilterMode.Bilinear,
-                        wrapMode: TextureWrapMode.Clamp,
-                        dimension: TextureDimension.Tex2DArray,
-                        name: "ColorTargetArray"
-                );
-
-                DepthTarget = rtHandleSytem.Alloc(
-                    scaleFactor: Vector2.one,
+            // レンダーターゲットの生成
+            _colorTarget = colorRTArrayHandleSysetem.Alloc(
+                    width: viewResolution.x,
+                    height: viewResolution.y,
                     slices: TotalViewCount,
-                    depthBufferBits: DepthBits.Depth32,
-                    colorFormat: GraphicsFormat.R32_SFloat,
-                    filterMode: FilterMode.Point,
+                    depthBufferBits: DepthBits.None,
+                    colorFormat: GraphicsFormat.R8G8B8A8_SRGB,
+                    filterMode: FilterMode.Bilinear,
                     wrapMode: TextureWrapMode.Clamp,
                     dimension: TextureDimension.Tex2DArray,
-                    name: "DepthTargetArray"
-                    );
-            }
+                    name: "ColorTargetArray"
+            );
 
+            _depthTarget = depthRTArrayHandleSysetem.Alloc(
+                width: viewResolution.x,
+                height: viewResolution.y,
+                slices: TotalViewCount,
+                depthBufferBits: DepthBits.Depth32,
+                colorFormat: GraphicsFormat.R32_SFloat,
+                filterMode: FilterMode.Point,
+                wrapMode: TextureWrapMode.Clamp,
+                dimension: TextureDimension.Tex2DArray,
+                name: "DepthTargetArray"
+                );
         }
 
         public void OnScreenResize(int width, int height)
@@ -188,26 +178,29 @@ namespace MVR
 
         void InitializeRTHandleSystem()
         {
-            rtHandleSytem?.Dispose();
-            rtHandleSytem = new RTHandleSystem();
+            colorRTArrayHandleSysetem?.Dispose();
+            depthRTArrayHandleSysetem?.Dispose();
+            colorRTArrayHandleSysetem = new RTArrayHandleSystem();
+            depthRTArrayHandleSysetem = new RTArrayHandleSystem();
 
             Vector2Int viewResolution = multiviewCamera.InitialViewResolution(ViewCount, cam.pixelWidth, cam.pixelHeight);
-            Debug.Log(viewResolution);
-            rtHandleSytem.Initialize(viewResolution.x, viewResolution.y);
+            colorRTArrayHandleSysetem.Initialize(viewResolution.x, viewResolution.y);
+            depthRTArrayHandleSysetem.Initialize(viewResolution.x, viewResolution.y);
         }
 
-            void Init()
+        void Init()
         {
-            if(multiviewCamera != null || ViewCount.x < 0 || ViewCount.y < 0)
+            // カメラの取得
+            cam = GetComponent<Camera>();
+
+            if (multiviewCamera != null || ViewCount.x < 0 || ViewCount.y < 0)
                 ShouldRender = true;
             else
                 ShouldRender = false;
 
-            // カメラの取得
-            cam = GetComponent<Camera>();
-
             // RTHandleSystemの初期化
-            InitializeRTHandleSystem();
+            if(ShouldRender)
+                InitializeRTHandleSystem();
         }
 
         void OnEnable()
@@ -218,11 +211,16 @@ namespace MVR
         void Update()
         {
 #if UNITY_EDITOR
-            if(cam == null || rtHandleSytem == null)
+            if(cam == null || colorRTArrayHandleSysetem == null || depthRTArrayHandleSysetem == null)
             {
                 Init();
             }
             
+            if(multiviewCamera == null)
+            {
+                ShouldRender = false;
+                return;
+            }
 #endif
         }
 
@@ -234,10 +232,14 @@ namespace MVR
 
         public void ReleaseResources()
         {
-            ColorTarget?.Release();
-            ColorTarget = null;
-            DepthTarget?.Release();
-            DepthTarget = null;
+            _colorTarget?.Release();
+            _colorTarget = null;
+            _depthTarget?.Release();
+            _depthTarget = null;
+            colorRTArrayHandleSysetem?.Dispose();
+            colorRTArrayHandleSysetem = null;
+            depthRTArrayHandleSysetem?.Dispose();
+            depthRTArrayHandleSysetem = null;
             perViewDataBuffer?.Release();
             perViewDataBuffer = null;
         }

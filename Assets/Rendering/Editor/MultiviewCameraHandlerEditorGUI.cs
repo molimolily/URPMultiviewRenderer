@@ -12,8 +12,8 @@ namespace MVR
         private int maxTextureArraySlices;
         void OnEnable()
         {
-            maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 1;
-            Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
+            // maxTextureArraySlices = SystemInfo.supports2DArrayTextures ? SystemInfo.maxTextureArraySlices : 1;
+            // Debug.Log("Max Texture2DArray Slices: " + maxTextureArraySlices);
         }
         public override void OnInspectorGUI()
         {
@@ -21,27 +21,36 @@ namespace MVR
             handler = target as MultiviewCameraHandler;
             if (handler == null) return;
 
-            EditorGUI.BeginChangeCheck();
-            var viewCount = EditorGUILayout.Vector2IntField("View Count", handler.ViewCount);
-            if (EditorGUI.EndChangeCheck())
+            EditorGUILayout.LabelField("ViewCount", EditorStyles.boldLabel);
+            using (new EditorGUI.IndentLevelScope())
             {
-                if(viewCount.x < 1 || viewCount.y < 1)
+                EditorGUI.BeginChangeCheck();
+                // var viewCount = EditorGUILayout.Vector2IntField("View Count", handler.ViewCount);
+                var viewCount = handler.ViewCount;
+                var viewX = EditorGUILayout.DelayedIntField("x", viewCount.x);
+                var viewY = EditorGUILayout.DelayedIntField("y", viewCount.y);
+                if (EditorGUI.EndChangeCheck())
                 {
-                    // Debug.LogWarning("View Count must be greater than 0");
-                }
-                else if (viewCount.x * viewCount.y > maxTextureArraySlices)
-                {
-                    Debug.LogWarning("View Count exceeds the maximum number of texture array slices");
-                }
-                else if (viewCount.x > 0 && viewCount.y > 0)
-                {
-                    shouldRender = true;
-                    Undo.RecordObject(handler, "Change View Count");
-                    handler.ViewCount = viewCount;
-                    EditorUtility.SetDirty(handler);
-                }
+                    if (viewX < 1 || viewY < 1)
+                    {
+                        // Debug.LogWarning("View Count must be greater than 0");
+                    }
+                    else if (viewX * viewY > maxTextureArraySlices)
+                    {
+                        Debug.LogWarning("View Count exceeds the maximum number of texture array slices");
+                    }
+                    else if (viewX > 0 && viewY > 0)
+                    {
+                        shouldRender = true;
+                        Undo.RecordObject(handler, "Change View Count");
+                        handler.ViewCount = new Vector2Int(viewX, viewY);
+                        EditorUtility.SetDirty(handler);
+                    }
 
+                }
             }
+
+            EditorGUILayout.Space();
 
             EditorGUI.BeginChangeCheck();
             var multiviewCamera = EditorGUILayout.ObjectField("Multiview Camera", handler.multiviewCamera, typeof(BaseMultiviewCamera), true) as BaseMultiviewCamera;
