@@ -18,4 +18,4 @@ MonoBehaviour:
   m_RendererFeatures: []
   m_RendererFeatureMap: 
   m_UseNativeRenderPass: 0
-  mergeShader: {fileID: 4800000, guid: da1091ef7f7e2cc409fa4874728ec85f, type: 3}
+  mergeShader: {fileID: 4800000, guid: 57cc766e687e8374283781b3bffdd2fa, type: 3}

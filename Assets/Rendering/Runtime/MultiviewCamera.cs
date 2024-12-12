@@ -33,38 +33,13 @@ public class MultiviewCamera : BaseMultiviewCamera
             aspect = Screen.width / Screen.height;
 
 
-        Vector3 pos = transform.position + new Vector3(x - (viewCount.x - 1) / 2.0f, -(y - (viewCount.y - 1) / 2.0f), 0) * pitch;
-        perViewData.viewMatrix = CreateViewMatrix(pos);
+        Vector3 pos = new Vector3(x - (viewCount.x - 1) / 2.0f, -(y - (viewCount.y - 1) / 2.0f), 0) * pitch;
+        pos = transform.TransformPoint(pos);
+        perViewData.viewMatrix = MatrixUtil.CreateViewMatrix(pos, transform.right.normalized, transform.up.normalized, -transform.forward);
         perViewData.projectionMatrix = GL.GetGPUProjectionMatrix(Matrix4x4.Perspective(fov, aspect, near, far), true);
     }
 
-    Matrix4x4 CreateViewMatrix(Vector3 position)
+    public override void SetupMergeMaterial(Material mergeMaterial)
     {
-        Vector3 right = transform.right;
-        Vector3 up = transform.up;
-        Vector3 forward = -transform.forward; // ÉJÉÅÉâÇÃëOï˚ÇÕïâÇÃï˚å¸
-
-        Matrix4x4 viewMatrix = new Matrix4x4();
-
-        viewMatrix.m00 = right.x;
-        viewMatrix.m01 = right.y;
-        viewMatrix.m02 = right.z;
-        viewMatrix.m03 = -Vector3.Dot(right, position);
-
-        viewMatrix.m10 = up.x;
-        viewMatrix.m11 = up.y;
-        viewMatrix.m12 = up.z;
-        viewMatrix.m13 = -Vector3.Dot(up, position);
-
-        viewMatrix.m20 = forward.x;
-        viewMatrix.m21 = forward.y;
-        viewMatrix.m22 = forward.z;
-        viewMatrix.m23 = -Vector3.Dot(forward, position);
-
-        viewMatrix.m30 = 0.0f;
-        viewMatrix.m31 = 0.0f;
-        viewMatrix.m32 = 0.0f;
-        viewMatrix.m33 = 1.0f;
-        return viewMatrix;
     }
 }
