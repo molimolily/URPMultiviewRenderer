@@ -12,6 +12,8 @@ namespace MVR
     {
         Camera cam;
 
+        [SerializeField] bool isResolutionUpdatedPerFrame = true;
+
         List<SingleViewCamera> cameras = new List<SingleViewCamera>();
         List<PerViewData> perViewData = new List<PerViewData>();
         GraphicsBuffer perViewDataBuffer;
@@ -131,7 +133,7 @@ namespace MVR
         /// </summary>
         public virtual void SetupMergeMaterial(Material material)
         {
-            
+            multiviewCamera.SetupMergeMaterial(material);
         }
 
         /// <summary>
@@ -221,6 +223,11 @@ namespace MVR
         void LateUpdate()
         {
             if(multiviewCamera == null) return;
+
+            if(isResolutionUpdatedPerFrame)
+            {
+                AllocateRenderTarget();
+            }
 
             // PerViewDataÇÃçXêV
             UpdatePerViewData();

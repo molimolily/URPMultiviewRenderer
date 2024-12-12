@@ -13,6 +13,7 @@ namespace MVR
 
         RTHandle colorRtArray;
         RTHandle depthRtArray;
+        Vector4 scaleFactor;
 
         public MultiviewRenderPass()
         {
@@ -29,10 +30,11 @@ namespace MVR
             cmd.SetInstanceMultiplier((uint)(viewCount.x * viewCount.y));
         }
 
-        public void SetTarget(RTHandle color, RTHandle depth)
+        public void SetTarget(RTHandle color, RTHandle depth, Vector4 scaleFactor)
         {
             colorRtArray = color;
             depthRtArray = depth;
+            this.scaleFactor = scaleFactor;
         }
 
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -47,6 +49,9 @@ namespace MVR
 
                 // keywordの有効化
                 cmd.SetKeyword(multiview_Keyword, true);
+
+                // カメラのビューポートを設定
+                cmd.SetViewport(new Rect(0, 0, Mathf.CeilToInt(colorRtArray.rt.width * scaleFactor.x), Mathf.CeilToInt(colorRtArray.rt.height * scaleFactor.y)));
             }
 
             context.ExecuteCommandBuffer(cmd);

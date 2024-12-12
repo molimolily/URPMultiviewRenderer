@@ -91,7 +91,7 @@ namespace MVR
             }
 
             // レンダーターゲットの設定
-            multiviewRenderPass.SetTarget(handler.ColorTarget, handler.DepthTarget);
+            multiviewRenderPass.SetTarget(handler.ColorTarget, handler.DepthTarget, handler.ScaleFactor);
 
             // 視点数の設定
             multiviewRenderPass.viewCount = handler.ViewCount;

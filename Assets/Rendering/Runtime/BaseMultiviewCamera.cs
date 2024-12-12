@@ -24,4 +24,5 @@ public abstract class BaseMultiviewCamera : MonoBehaviour
 
     public abstract Vector2Int ComputeViewResolution(Vector2Int viewCount, int width, int height);
     public abstract void SetPerViewData(Vector2Int viewCount, int x, int y, out PerViewData perViewData);
+    public abstract void SetupMergeMaterial(Material mergeMaterial);
 }
